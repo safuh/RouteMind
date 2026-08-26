@@ -4,7 +4,7 @@
 
 **Current phase:** Milestone 2 — Multimodal Transportation Graph
 
-**Overall status:** ~18% — Foundation and synthetic data layer established; graph engine next.
+**Overall status:** ~25% — Foundation, domain, synthetic data, and initial graph construction established.
 
 ## Status Legend
 
@@ -109,66 +109,56 @@ A milestone is complete only when implementation, automated tests, representativ
 - [ ] Waiting/storage costs
 - [ ] Delay penalties
 
-### M1 evidence
-
-`src/routemind/domain/`, `src/routemind/scenarios/`, and `tests/` contain the initial implementation and tests.
-
----
-
 # M2 — Multimodal Transportation Graph
 
 **Status: 🟡 In progress**
 
 ## Graph model
 
-- [ ] Location nodes
-- [ ] Hub nodes
-- [ ] Transport-service edges
-- [ ] Scheduled-service edges
-- [ ] Transfer edges
-- [ ] Final-mile edges
-- [ ] Provider metadata
-
-## Edge attributes
-
-- [ ] Cost
-- [ ] Transit duration
-- [ ] Departure time
-- [ ] Arrival time
-- [ ] Weight capacity
-- [ ] Volume capacity
-- [ ] Reliability
-- [ ] Transport mode
-- [ ] Provider
-- [ ] Restrictions
+- [x] Location nodes
+- [x] Transport-service edges
+- [x] Scheduled-service edges
+- [x] Provider metadata
+- [x] Cost metadata
+- [x] Transit duration
+- [x] Departure time
+- [x] Arrival time
+- [x] Weight capacity
+- [x] Volume capacity
+- [x] Reliability
+- [x] Transport mode
+- [x] Restrictions
+- [ ] Explicit hub node semantics
+- [ ] Explicit transfer edges
+- [ ] Explicit final-mile edge semantics
 
 ## Graph engine
 
-- [ ] Build graph from transport options
+- [x] Build graph from transport options
+- [x] Preserve multiple schedules as separate edges
+- [x] Preserve schedule-specific capacity
+- [x] Reject invalid schedules
+- [x] Reject unknown graph endpoints
+- [x] Reject invalid capacity
+- [x] Outgoing-edge lookup
+- [x] Graph documentation
 - [ ] Filter unavailable services
-- [ ] Handle scheduled services
-- [ ] Handle capacity
-- [ ] Handle transfer times
-- [ ] Support multimodal transitions
-- [ ] Graph validation
+- [ ] Time-dependent path search
+- [ ] Transfer-time constraints
+- [ ] Cargo compatibility constraints
 - [ ] Graph diagnostics
 
-### Immediate implementation
+## M2 evidence
 
-1. Define immutable graph node/edge models.
-2. Convert synthetic transport options into graph edges.
-3. Preserve schedule, capacity, price and provider metadata.
-4. Add transfer semantics.
-5. Test a Nairobi → Nakuru → Kisumu multimodal network.
+Implemented in `src/routemind/graph/` with tests in `tests/graph/`. The graph currently converts synthetic transport services into scheduled edges while preserving operational attributes required by later optimization.
 
-### M2 exit criteria
+### Immediate next implementation
 
-- [ ] Synthetic network converts into a valid graph.
-- [ ] Direct and multi-leg services are represented.
-- [ ] Public and private transport use the same graph abstraction.
-- [ ] Graph preserves time and capacity constraints needed by path search.
-
----
+1. Add explicit transfer semantics.
+2. Add time-dependent candidate-path search.
+3. Make path search capacity/deadline aware.
+4. Demonstrate Nairobi → Nakuru → Kisumu alternatives.
+5. Compare direct and multimodal paths.
 
 # M3 — Candidate Path Discovery
 
@@ -312,8 +302,6 @@ A milestone is complete only when implementation, automated tests, representativ
 - [ ] Cloud SQL
 - [ ] Artifact Registry
 
----
-
 # Benchmark & Research Track
 
 ## Scenarios
@@ -348,8 +336,6 @@ A milestone is complete only when implementation, automated tests, representativ
 - [ ] Solver runtime
 - [ ] Solution quality / optimality gap
 
----
-
 # Portfolio Deliverables
 
 - [ ] Production-quality Python architecture
@@ -370,8 +356,6 @@ A milestone is complete only when implementation, automated tests, representativ
 - [ ] Reproducible benchmark suite
 - [ ] Technical documentation
 
----
-
 # Change Log
 
 | Date | Change |
@@ -382,3 +366,5 @@ A milestone is complete only when implementation, automated tests, representativ
 | 2026-08-26 | Domain feasibility validation added |
 | 2026-08-26 | Reproducible synthetic logistics scenario engine added |
 | 2026-08-26 | Scenario tests and documentation added |
+| 2026-08-26 | Time-dependent multimodal graph models and builder added |
+| 2026-08-26 | Graph construction tests and documentation added |
