@@ -104,12 +104,7 @@ class TransportPrice(BaseModel):
 
 
 class TransportOption(BaseModel):
-    """A feasible transportation service or capacity offering.
-
-    A transport option deliberately does not imply ownership by the customer.
-    It may represent an internal fleet resource, public transportation, a carrier,
-    a courier, or another logistics provider.
-    """
+    """A feasible transportation service or capacity offering."""
 
     id: str
     provider_id: str
