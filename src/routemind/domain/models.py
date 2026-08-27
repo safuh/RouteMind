@@ -56,7 +56,7 @@ class Package(BaseModel):
 
     @property
     def volume_m3(self) -> float:
-        return self.length_m * self.width_m * self.height_m * self.quantity
+        return round(self.length_m * self.width_m * self.height_m * self.quantity, 12)
 
 
 class Shipment(BaseModel):
