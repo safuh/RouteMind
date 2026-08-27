@@ -9,7 +9,7 @@ from typing import Iterable
 from ortools.sat.python import cp_model
 
 from routemind.consolidation.models import ConsolidationOpportunity, SharedTransportSegment
-from routemind.domain.models import OptimizationPolicy, OptimizationResult, TransportLeg, TransportPlan, TransportOption
+from routemind.domain.models import OptimizationPolicy, OptimizationResult, TransportLeg, TransportOption, TransportPlan
 from routemind.paths.models import CandidatePath
 
 _SCALE = 1000
@@ -30,17 +30,15 @@ def optimize_portfolio(
     consolidation_opportunities: Iterable[ConsolidationOpportunity] = (),
     max_time_seconds: float = 30.0,
 ) -> OptimizationResult:
-    """Choose exactly one feasible candidate path per shipment.
+    """Choose one path per shipment while enforcing portfolio capacity.
 
-    CP-SAT enforces scheduled-service capacity across the whole portfolio. A
-    consolidation opportunity is an optional objective bonus when the selected
-    path for every participating shipment actually contains every shared
-    scheduled segment in that opportunity. The optimizer never fabricates a
-    service or path; all decision variables originate from deterministic path
-    discovery.
+    CP-SAT owns the portfolio decision. Consolidation opportunities contribute a
+    bonus only when the selected path for every participating shipment contains
+    every exact scheduled segment in the opportunity.
     """
     policy = policy or OptimizationPolicy()
     paths = tuple(path for path in candidate_paths if path.deadline_feasible)
+    opportunities = tuple(consolidation_opportunities)
     by_shipment: dict[str, list[int]] = defaultdict(list)
     for index, path in enumerate(paths):
         by_shipment[path.shipment_id].append(index)
@@ -99,10 +97,11 @@ def optimize_portfolio(
         objective_terms.append(_int(value) * selected[index])
 
     opportunity_vars: list[tuple[cp_model.IntVar, ConsolidationOpportunity]] = []
+    shipment_op_vars: dict[str, list[cp_model.IntVar]] = defaultdict(list)
     for op_index, opportunity in enumerate(opportunities):
-        if not opportunity.feasible or opportunity.savings < 0:
+        if not opportunity.feasible or opportunity.savings < 0 or not opportunity.shared_segments:
             continue
-        participation_vars = []
+        participation_vars: list[cp_model.IntVar] = []
         for shipment_id in opportunity.shipment_ids:
             matching = [
                 selected[index]
@@ -117,12 +116,20 @@ def optimize_portfolio(
             participation_vars.append(marker)
         if len(participation_vars) != len(opportunity.shipment_ids):
             continue
+
         op_var = model.new_bool_var(f"consolidation_{op_index}")
-        model.add_bool_and(participation_vars).only_enforce_if(op_var)
         for marker in participation_vars:
-            model.add_implication(op_var, marker)
+            model.add(op_var <= marker)
+        model.add(op_var >= sum(participation_vars) - len(participation_vars) + 1)
+        for shipment_id in opportunity.shipment_ids:
+            shipment_op_vars[shipment_id].append(op_var)
         opportunity_vars.append((op_var, opportunity))
         objective_terms.append(-_int(float(opportunity.savings) * policy.consolidation_weight) * op_var)
+
+    # A shipment can participate in at most one accepted consolidation
+    # opportunity. This prevents double-counting savings/resources.
+    for variables in shipment_op_vars.values():
+        model.add(sum(variables) <= 1)
 
     model.minimize(sum(objective_terms))
     solver = cp_model.CpSolver()
