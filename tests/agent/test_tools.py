@@ -1,6 +1,11 @@
 import json
 
-from app.tools import explain_optimization_result, extract_optimization_policy, summarize_result, validate_optimization_result
+from app.tools import (
+    explain_optimization_result,
+    extract_optimization_policy,
+    summarize_result,
+    validate_optimization_result,
+)
 
 
 def test_objective_extraction_is_conservative_and_structured():
@@ -21,7 +26,10 @@ def test_result_summary_preserves_deterministic_facts():
 
 
 def test_infeasibility_explanation_uses_only_solver_warnings():
-    result = {"plans": [], "objective_value": 0.0, "feasible": False, "warnings": ["Capacity exceeded"], "metrics": {}}
+    result = {
+        "plans": [], "objective_value": 0.0, "feasible": False,
+        "warnings": ["Capacity exceeded"], "metrics": {},
+    }
     explanation = explain_optimization_result(json.dumps(result))
     assert explanation == "Infeasible portfolio: Capacity exceeded"
 
