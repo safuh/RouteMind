@@ -4,7 +4,7 @@
 
 **Current phase:** Milestone 6 — Google ADK Agent Layer
 
-**Overall status:** ~74% — M3 remains validation-pending; M4 has deterministic consolidation and competing-capacity reservation; M5 now has a CP-SAT portfolio optimizer; M6 now has an ADK orchestration layer with structured deterministic tools and grounding-focused regression tests. Runtime/CI validation is still required before milestone completion.
+**Overall status:** ~76% — M3/M4/M5/M6 core implementation is now on `main`. Automated CI validation passes for the merged M5/M6 branch; remaining work is primarily benchmark evidence, richer consolidation portfolio generation, model-backed ADK evaluation, and later milestones.
 
 | Milestone | Area | Status |
 |---|---|---:|
@@ -13,23 +13,28 @@
 | M2 | Transportation graph | 🟢 |
 | M3 | Candidate path discovery | 🟡 |
 | M4 | Shipment consolidation | 🟡 |
-| M5 | Deterministic optimization | 🟡 |
-| M6 | Google ADK agent layer | 🟡 |
+| M5 | Deterministic optimization | 🟢 Core implementation + automated validation |
+| M6 | Google ADK agent layer | 🟢 Core implementation + automated validation |
 | M7 | Dynamic re-optimization | ⬜ |
 | M8 | Predictive logistics intelligence | ⬜ |
 | M9 | Production platform | ⬜ |
 
 # M3 — Candidate Path Discovery
-**Status: 🟡 Implementation complete; validation evidence pending**
+**Status: 🟡 Implementation complete; runtime regression suite now passing, benchmark evidence pending**
 
-## Remaining validation
-- [ ] Execute full test suite in CI/runtime environment
+## Validation evidence
+- [x] Full pytest suite executes successfully in GitHub Actions
+- [x] Path-search regressions fixed for emissions state initialization
+- [x] Waiting-time semantics validated by existing path-search tests
+- [x] Minimum-transfer and maximum-transfer diagnostics validated
+
+## Remaining
 - [ ] Execute benchmark suite and capture runtime evidence
 - [ ] Produce search performance benchmark report
 - [ ] Add provider-specific transfer compatibility semantics
 
 # M4 — Shipment Consolidation
-**Status: 🟡 Deterministic foundation substantially implemented; validation and advanced portfolio semantics pending**
+**Status: 🟡 Deterministic foundation substantially implemented; advanced portfolio semantics pending**
 
 ## Implemented
 - [x] Concrete scheduled shared-segment identity
@@ -51,15 +56,15 @@
 - [x] Shipment double-reservation protection
 - [x] Atomic multi-segment reservation
 - [x] Structured reservation rejection diagnostics
+- [x] Consolidation regression suite passing in CI
 
 ## Remaining
-- [ ] Execute consolidation tests in CI/runtime environment
 - [ ] Hub-and-spoke opportunity generation
 - [ ] Consolidation-vs-direct portfolio comparison
 - [ ] Generate all coexisting feasible consolidation combinations
 
 # M5 — Deterministic Optimization Engine
-**Status: 🟡 Implementation complete; validation pending**
+**Status: 🟢 Core implementation and automated validation complete**
 
 ## Implemented
 - [x] OR-Tools CP-SAT integration
@@ -73,15 +78,15 @@
 - [x] Deterministic single-worker solver configuration
 - [x] Solver objective/constraint result metrics
 - [x] Automated optimizer tests
+- [x] M5 tests pass in CI
 
 ## Remaining
-- [ ] Runtime/CI execution evidence
 - [ ] Formal baseline comparison reporting
 - [ ] Richer multi-segment consolidation portfolio generation from M4
 - [ ] Full optimality-gap/benchmark reporting
 
 # M6 — Google ADK Agent Layer
-**Status: 🟡 Implementation complete; validation pending**
+**Status: 🟢 Core implementation and automated validation complete; model-backed evaluation pending**
 
 ## Implemented
 - [x] RouteMind Logistics Manager ADK agent
@@ -92,15 +97,16 @@
 - [x] Deterministic infeasibility/trade-off explanation
 - [x] Grounding instructions prohibiting invented logistics facts
 - [x] Synthetic-data disclosure requirement
-- [x] Google ADK dependency updated to current 2.x range
+- [x] Google ADK 2.x dependency
 - [x] Local ADK playground instructions
 - [x] ADK tool regression tests
 - [x] CI workflow for lint and full pytest execution
+- [x] ADK agent import smoke test in CI
+- [x] Full pytest suite passing in CI
 
-## Remaining validation
-- [ ] Install ADK and execute local agent smoke test
-- [ ] Execute full pytest suite in CI
-- [ ] Execute ADK evaluation/regression dataset with model credentials
+## Remaining
+- [ ] Execute model-backed ADK evaluation/regression dataset with configured credentials
+- [ ] Validate local `adk web` interactive session with real Gemini credentials
 
 # M7 — Dynamic Re-optimization
 **Status: ⬜ Not started**
@@ -154,3 +160,4 @@
 | 2026-08-27 | Deterministic capacity reservation across competing consolidation opportunities added |
 | 2026-08-27 | CP-SAT portfolio optimization with shared scheduled capacity and consolidation objective integration added |
 | 2026-08-27 | Google ADK Logistics Manager, structured tools, grounding rules and CI workflow added |
+| 2026-08-27 | Full 72-test CI suite and ADK import smoke test passed; M5/M6 merged to main |
