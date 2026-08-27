@@ -3,7 +3,6 @@ from decimal import Decimal
 
 from routemind.domain.models import (
     Location,
-    OptimizationPolicy,
     Package,
     Shipment,
     TransportCapacity,
@@ -98,7 +97,6 @@ def test_optimizer_assigns_one_path_per_shipment_and_minimizes_cost():
     t = datetime(2026, 8, 27, 8, tzinfo=UTC)
     bus1 = option("BUS-1", nbo, nku, t, "100", 100)
     bus2 = option("BUS-2", nbo, nku, t, "40", 100)
-    shipments = {"A": shipment("A", nbo, nku, 10), "B": shipment("B", nbo, nku, 10)}
     paths = [
         path("A", "BUS-1", nbo, nku, t, 10, "100"),
         path("A", "BUS-2", nbo, nku, t, 10, "40"),
