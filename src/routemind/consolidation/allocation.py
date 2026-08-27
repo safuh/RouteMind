@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
 
-from routemind.domain.models import PricingModel, Shipment, TransportOption, TransportLeg
+from routemind.domain.models import PricingModel, Shipment, TransportLeg, TransportOption
 from routemind.paths.models import CandidatePath
 
 from .models import SharedTransportSegment
@@ -87,12 +87,7 @@ def allocate_consolidation(
     shipments: dict[str, Shipment],
     transport_options: dict[str, TransportOption],
 ) -> ConsolidationAllocation:
-    """Allocate every leg into shared or shipment-private capacity buckets.
-
-    A segment is shared only when the exact scheduled service instance is used
-    by at least two shipments. Downstream legs remain private when their
-    concrete scheduled segment is used by one shipment only.
-    """
+    """Allocate every leg into shared or shipment-private capacity buckets."""
     shipment_ids = tuple(dict.fromkeys(path.shipment_id for path in paths))
     occurrences: dict[tuple[str, str, str, object, object], list[tuple[str, TransportLeg]]] = defaultdict(list)
     for path in paths:
@@ -139,7 +134,6 @@ def allocate_consolidation(
         else:
             private[shipment_ids_on_segment[0]].append(allocation)
 
-    shared.sort(key=lambda item: item.segment.identity)
     ordered_private = {
         shipment_id: tuple(private.get(shipment_id, ()))
         for shipment_id in shipment_ids
