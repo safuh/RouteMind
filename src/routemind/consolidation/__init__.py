@@ -14,9 +14,20 @@ from .models import (
     ConsolidationRejectionReason,
     SharedTransportSegment,
 )
+from .reservation import (
+    CapacityReservation,
+    CapacityReservationLedger,
+    CapacityReservationRejection,
+    CapacityReservationResult,
+    reserve_opportunities,
+)
 from .time_windows import check_group_time_windows, check_path_time_window
 
 __all__ = [
+    "CapacityReservation",
+    "CapacityReservationLedger",
+    "CapacityReservationRejection",
+    "CapacityReservationResult",
     "ConsolidationAllocation",
     "ConsolidationOpportunity",
     "ConsolidationRejection",
@@ -32,4 +43,5 @@ __all__ = [
     "generate_consolidation_groups",
     "generate_shipment_groups",
     "reject_unknown_shipments",
+    "reserve_opportunities",
 ]
