@@ -2,9 +2,9 @@
 
 > Living engineering tracker. Do not mark a component complete until implementation, automated tests, documentation, and validation evidence exist.
 
-**Current phase:** Milestone 3 — Candidate Path Discovery
+**Current phase:** Milestone 4 — Shipment Consolidation
 
-**Overall status:** ~49% — M3 implementation is complete; runtime benchmark evidence remains pending.
+**Overall status:** ~52% — M3 implementation remains validation-pending; M4 now has deterministic shared-segment detection, consolidation feasibility, capacity aggregation, cargo checks, and pricing economics.
 
 | Milestone | Area | Status |
 |---|---|---:|
@@ -12,7 +12,7 @@
 | M1 | Multimodal domain + synthetic data | 🟢 |
 | M2 | Transportation graph | 🟢 |
 | M3 | Candidate path discovery | 🟡 |
-| M4 | Shipment consolidation | ⬜ |
+| M4 | Shipment consolidation | 🟡 |
 | M5 | Deterministic optimization | ⬜ |
 | M6 | Google ADK agent layer | ⬜ |
 | M7 | Dynamic re-optimization | ⬜ |
@@ -61,16 +61,33 @@
 - [ ] Benchmark/performance evidence is executed and recorded.
 
 # M4 — Shipment Consolidation
-**Status: ⬜ Not started**
-- [ ] Shipment grouping
-- [ ] Shared-segment detection
-- [ ] Time-window compatibility
-- [ ] Cargo compatibility
-- [ ] Aggregate capacity
-- [ ] Capacity reservation
-- [ ] Consolidation economics
-- [ ] Hub-and-spoke opportunities
-- [ ] Consolidation vs direct comparison
+**Status: 🟡 First brick implemented; validation pending**
+
+## Implemented in first brick
+- [x] Concrete scheduled shared-segment identity
+- [x] Shared-segment detection across candidate paths
+- [x] Different destinations can share an upstream segment
+- [x] Shipment-group weight aggregation
+- [x] Shipment-group volume aggregation
+- [x] Shipment-group package-count aggregation
+- [x] Schedule-specific remaining capacity checks
+- [x] Existing domain cargo compatibility reused
+- [x] Structured consolidation rejection diagnostics
+- [x] Fixed/quoted consolidation economics
+- [x] Additive variable-pricing economics
+- [x] Three-shipment aggregation without pairwise-only assumptions
+- [x] Consolidation domain documentation
+- [x] Deterministic consolidation tests for core scenarios
+
+## Remaining
+- [ ] Execute consolidation tests in CI/runtime environment
+- [ ] Capacity reservation across competing consolidation opportunities
+- [ ] Shipment grouping/candidate subset generation
+- [ ] Explicit end-to-end time-window compatibility model
+- [ ] Transfer handling allocation for shared/unshared downstream legs
+- [ ] Hub-and-spoke opportunity generation
+- [ ] Consolidation-vs-direct portfolio comparison
+- [ ] Feed feasible consolidation combinations into M5 optimization
 
 # M5 — Deterministic Optimization Engine
 **Status: ⬜ Not started**
@@ -136,3 +153,6 @@
 | 2026-08-27 | Candidate path model, multimodal search, constraints, Pareto filtering and diagnostics established |
 | 2026-08-27 | Distance-aware pricing and optional emissions metrics added |
 | 2026-08-27 | Deterministic economics tests and benchmark harness updated |
+| 2026-08-27 | M4 consolidation domain models and scheduled shared-segment detection added |
+| 2026-08-27 | Consolidation feasibility, capacity aggregation, cargo checks and deterministic economics added |
+| 2026-08-27 | Core M4 consolidation scenarios documented and covered by automated tests |
