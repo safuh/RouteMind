@@ -73,7 +73,17 @@ class PathSearchEngine:
 
         queue: list[tuple[Decimal, int, _State]] = []
         counter = 0
-        initial = _State(shipment.origin.id, shipment.ready_at, (), Decimal("0"), 1.0, 0.0, 0.0, 0.0)
+        initial = _State(
+            shipment.origin.id,
+            shipment.ready_at,
+            (),
+            Decimal("0"),
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        )
         heappush(queue, (Decimal("0"), counter, initial))
         candidates: list[CandidatePath] = []
         seen: set[tuple[str, object, tuple[str, ...]]] = set()
@@ -118,113 +128,125 @@ class PathSearchEngine:
                         continue
                     if not transport_can_carry_shipment(shipment, option, available_weight_kg=schedule.available_weight_kg, available_volume_m3=schedule.available_volume_m3):
                         reason = RejectionReason.WEIGHT_CAPACITY if schedule.available_weight_kg is not None and shipment.weight_kg > schedule.available_weight_kg else RejectionReason.VOLUME_CAPACITY
-                        self._record(rejected, PathRejection(option_id=option.id, schedule_departure=schedule.departure_at.isoformat(), reason=reason, message="Shipment exceeds schedule-specific transport capacity"))
+                        self._record(rejected, PathRejection(option_id=option.id, schedule_departure=schedule.departure_at.isoformat(), reason=reason, message="Shipment exceeds schedule-specific capacity"))
                         continue
+
+                    leg = TransportLeg(
+                        option_id=option.id,
+                        origin=option.origin,
+                        destination=option.destination,
+                        departure_at=schedule.departure_at,
+                        arrival_at=schedule.arrival_at,
+                        allocated_weight_kg=shipment.weight_kg,
+                        allocated_volume_m3=shipment.volume_m3,
+                    )
+                    arrival = schedule.arrival_at
+                    if state.legs and arrival < state.ready_at:
+                        continue
+                    transfer_wait = max(0.0, (schedule.departure_at - state.ready_at).total_seconds()) if state.legs else max(0.0, (schedule.departure_at - shipment.ready_at).total_seconds())
+                    transit = state.transit_seconds + schedule.transit_seconds
+                    waiting = state.waiting_seconds + transfer_wait
+                    cost = state.cost + self._leg_cost(shipment, option) + (self._config.transfer_handling_cost if state.legs else Decimal("0"))
                     reliability = state.reliability * option.reliability
-                    if reliability < self._config.min_reliability:
-                        self._record(rejected, PathRejection(option_id=option.id, schedule_departure=schedule.departure_at.isoformat(), reason=RejectionReason.RELIABILITY, message="Compounded path reliability is below the configured threshold"))
-                        continue
-                    leg = TransportLeg(option_id=option.id, origin=option.origin, destination=option.destination, departure_at=schedule.departure_at, arrival_at=schedule.arrival_at, allocated_weight_kg=shipment.weight_kg, allocated_volume_m3=shipment.volume_m3)
-                    ids = tuple(item.option_id for item in state.legs) + (option.id,)
-                    key = (option.destination.id, schedule.arrival_at, ids)
-                    if key in seen:
-                        continue
-                    seen.add(key)
+                    emissions = state.emissions_kg_co2e + self._leg_emissions(option, leg)
+                    utilization = max(
+                        state.capacity_utilization,
+                        shipment.weight_kg / option.capacity.max_weight_kg,
+                        shipment.volume_m3 / option.capacity.max_volume_m3 if option.capacity.max_volume_m3 else 0.0,
+                    )
+                    next_state = _State(option.destination.id, arrival, state.legs + (leg,), cost, reliability, transit, waiting, utilization, emissions)
+                    key = (next_state.location_id, next_state.ready_at, tuple(item.option_id for item in next_state.legs))
+                    if key not in seen:
+                        seen.add(key)
+                        counter += 1
+                        heappush(queue, (next_state.cost, counter, next_state))
 
-                    utilization = self._capacity_utilization(shipment, option, schedule)
-                    waiting = (schedule.departure_at - state.ready_at).total_seconds()
-                    leg_cost = self._price_for_shipment(option, shipment)
-                    cost = state.cost + leg_cost + (self._config.transfer_handling_cost if state.legs else Decimal("0"))
-                    emissions = state.emissions_kg_co2e + self._emissions_for(option, shipment)
-                    next_state = _State(option.destination.id, schedule.arrival_at, state.legs + (leg,), cost, reliability, state.transit_seconds + schedule.transit_seconds, state.waiting_seconds + waiting, max(state.capacity_utilization, utilization), emissions)
-                    counter += 1
-                    heappush(queue, (cost + Decimal(str(schedule.transit_seconds / 3600 * 0.01)), counter, next_state))
-
-        limit_reached = bool(queue and expansions >= self._config.max_expansions)
-        if limit_reached:
-            self._record(rejected, PathRejection(reason=RejectionReason.SEARCH_LIMIT, message="Maximum path-search expansion budget reached"))
         retained = remove_dominated_paths(candidates) if self._config.remove_dominated else candidates
         retained = retained[: self._config.max_candidates]
-        self._finish(expansions, generated, retained, rejected, limit_reached)
+        self._finish(expansions, generated, retained, rejected, bool(queue))
         return retained
 
-    def _finish(self, expansions: int, generated: int, retained: list[CandidatePath], rejected: list[PathRejection], limit_reached: bool) -> None:
-        self.last_diagnostics = PathSearchDiagnostics(expansions=expansions, generated_candidates=generated, retained_candidates=len(retained), rejected=tuple(rejected), expansion_limit_reached=limit_reached)
+    def _build_candidate(self, shipment: Shipment, state: _State) -> CandidatePath:
+        return CandidatePath(
+            shipment_id=shipment.id,
+            legs=state.legs,
+            total_cost=state.cost,
+            currency=self._options[state.legs[0].option_id].price.currency,
+            transit_seconds=state.transit_seconds,
+            waiting_seconds=state.waiting_seconds,
+            number_of_transfers=max(0, len(state.legs) - 1),
+            reliability=state.reliability,
+            modes=tuple(self._options[leg.option_id].mode for leg in state.legs),
+            providers=tuple(self._options[leg.option_id].provider_id for leg in state.legs),
+            capacity_utilization=min(1.0, state.capacity_utilization),
+            deadline_feasible=shipment.deadline is None or state.ready_at <= shipment.deadline,
+            emissions_kg_co2e=state.emissions_kg_co2e,
+        )
+
+    def _policy_rejection(self, option: TransportOption) -> tuple[RejectionReason, str] | None:
+        if self._config.allowed_modes is not None and option.mode not in self._config.allowed_modes:
+            return RejectionReason.MODE_POLICY, "Transport mode is not allowed"
+        if option.mode in self._config.excluded_modes:
+            return RejectionReason.MODE_POLICY, "Transport mode is excluded"
+        if self._config.allowed_provider_ids is not None and option.provider_id not in self._config.allowed_provider_ids:
+            return RejectionReason.PROVIDER_POLICY, "Provider is not allowed"
+        if option.provider_id in self._config.excluded_provider_ids:
+            return RejectionReason.PROVIDER_POLICY, "Provider is excluded"
+        if option.reliability < self._config.min_reliability:
+            return RejectionReason.RELIABILITY, "Provider reliability is below policy threshold"
+        return None
+
+    def _cargo_compatible(self, shipment: Shipment, option: TransportOption) -> bool:
+        return all(transport_can_carry_shipment(shipment, option) for _ in (0,))
+
+    def _price_supported(self, option: TransportOption) -> bool:
+        return option.price.model.value not in {"per_km", "per_kg_km"} or option.distance_km is not None
+
+    def _leg_cost(self, shipment: Shipment, option: TransportOption) -> Decimal:
+        amount = option.price.amount
+        model = option.price.model.value
+        if model in {"fixed", "quoted"}:
+            return amount
+        if model == "per_kg":
+            return amount * Decimal(str(shipment.weight_kg))
+        if model == "per_volume":
+            return amount * Decimal(str(shipment.volume_m3))
+        if option.distance_km is None:
+            raise ValueError(f"distance_km is required for {model} pricing on {option.id!r}")
+        distance = Decimal(str(option.distance_km))
+        if model == "per_km":
+            return amount * distance
+        if model == "per_kg_km":
+            return amount * distance * Decimal(str(shipment.weight_kg))
+        raise ValueError(f"Unsupported pricing model: {model}")
+
+    def _leg_emissions(self, option: TransportOption, leg: TransportLeg) -> float:
+        if option.carbon_kg_co2e_per_km is None or option.distance_km is None:
+            return 0.0
+        return option.carbon_kg_co2e_per_km * option.distance_km
+
+    def _schedule_rejection(self, shipment: Shipment, state: _State, schedule: TransportSchedule) -> tuple[RejectionReason, str] | None:
+        earliest = max(shipment.ready_at, state.ready_at)
+        if schedule.departure_at < earliest:
+            return RejectionReason.READINESS, "Shipment or transfer is not ready before departure"
+        if shipment.deadline is not None and schedule.arrival_at > shipment.deadline:
+            return RejectionReason.DEADLINE, "Transport schedule arrives after shipment deadline"
+        if state.legs and (schedule.departure_at - state.ready_at).total_seconds() < self._config.min_transfer_seconds:
+            return RejectionReason.TRANSFER_TIME, "Transfer wait is below configured minimum"
+        return None
 
     def _record(self, rejected: list[PathRejection], item: PathRejection) -> None:
         if len(rejected) < self._config.max_diagnostics:
             rejected.append(item)
 
-    def _build_candidate(self, shipment: Shipment, state: _State) -> CandidatePath:
-        return CandidatePath(shipment_id=shipment.id, legs=state.legs, total_cost=state.cost, currency=self._currency_for(state.legs), transit_seconds=state.transit_seconds, waiting_seconds=state.waiting_seconds, number_of_transfers=max(0, len(state.legs) - 1), reliability=state.reliability, modes=tuple(self._options[leg.option_id].mode for leg in state.legs), providers=tuple(self._options[leg.option_id].provider_id for leg in state.legs), capacity_utilization=state.capacity_utilization, deadline_feasible=shipment.deadline is None or state.legs[-1].arrival_at <= shipment.deadline, emissions_kg_co2e=state.emissions_kg_co2e if state.emissions_kg_co2e > 0 else None, metadata={"search": "time_dependent", "pricing": "distance_aware"})
-
-    def _currency_for(self, legs: tuple[TransportLeg, ...]) -> str:
-        currencies = {self._options[leg.option_id].price.currency for leg in legs}
-        if len(currencies) != 1:
-            raise ValueError("Candidate paths cannot combine transport prices in different currencies")
-        return currencies.pop()
-
-    def _policy_rejection(self, option: TransportOption) -> tuple[RejectionReason, str] | None:
-        if option.mode in self._config.excluded_modes or (self._config.allowed_modes is not None and option.mode not in self._config.allowed_modes):
-            return RejectionReason.POLICY_MODE, "Transport mode is excluded by search policy"
-        if option.provider_id in self._config.excluded_provider_ids or (self._config.allowed_provider_ids is not None and option.provider_id not in self._config.allowed_provider_ids):
-            return RejectionReason.POLICY_PROVIDER, "Transport provider is excluded by search policy"
-        return None
-
-    @staticmethod
-    def _cargo_compatible(shipment: Shipment, option: TransportOption) -> bool:
-        restrictions = {item.lower() for item in option.restrictions}
-        if "no_fragile" in restrictions and any(package.fragile for package in shipment.packages): return False
-        if "no_temperature_controlled" in restrictions and any(package.temperature_controlled for package in shipment.packages): return False
-        if "fragile_only" in restrictions and not all(package.fragile for package in shipment.packages): return False
-        if "temperature_controlled_only" in restrictions and not all(package.temperature_controlled for package in shipment.packages): return False
-        return True
-
-    def _schedule_rejection(self, shipment: Shipment, state: _State, schedule: TransportSchedule) -> tuple[RejectionReason, str] | None:
-        if schedule.arrival_at <= schedule.departure_at:
-            return RejectionReason.INVALID_SCHEDULE, "Schedule arrival must be after departure"
-        if schedule.departure_at < state.ready_at:
-            return RejectionReason.MISSED_DEPARTURE, "Shipment is not ready before the scheduled departure"
-        if shipment.deadline and schedule.arrival_at > shipment.deadline:
-            return RejectionReason.DEADLINE, "Scheduled arrival exceeds shipment deadline"
-        if state.legs and schedule.departure_at < state.legs[-1].arrival_at + timedelta(seconds=self._config.min_transfer_seconds):
-            return RejectionReason.TRANSFER_TIME, "Transfer does not provide the configured handling time"
-        return None
-
-    @staticmethod
-    def _price_supported(option: TransportOption) -> bool:
-        model = option.price.model.value
-        return model in {"fixed", "per_kg", "per_volume", "per_km", "per_kg_km", "quoted"} and (model not in {"per_km", "per_kg_km"} or option.distance_km is not None)
-
-    @staticmethod
-    def _price_for_shipment(option: TransportOption, shipment: Shipment) -> Decimal:
-        model, amount = option.price.model.value, option.price.amount
-        if model in {"fixed", "quoted"}: return amount
-        if model == "per_kg": return amount * Decimal(str(shipment.weight_kg))
-        if model == "per_volume": return amount * Decimal(str(shipment.volume_m3))
-        if option.distance_km is None:
-            raise ValueError("distance_km is required for distance-based pricing")
-        distance = Decimal(str(option.distance_km))
-        if model == "per_km": return amount * distance
-        if model == "per_kg_km": return amount * distance * Decimal(str(shipment.weight_kg))
-        raise ValueError(f"Unsupported pricing model: {model}")
-
-    @staticmethod
-    def _emissions_for(option: TransportOption, shipment: Shipment) -> float:
-        if option.distance_km is None or option.carbon_kg_co2e_per_km is None:
-            return 0.0
-        return option.distance_km * option.carbon_kg_co2e_per_km
-
-    @staticmethod
-    def _capacity_utilization(shipment: Shipment, option: TransportOption, schedule: TransportSchedule) -> float:
-        weight_capacity = min(option.capacity.max_weight_kg, schedule.available_weight_kg if schedule.available_weight_kg is not None else option.capacity.max_weight_kg)
-        utilization = shipment.weight_kg / weight_capacity
-        volume_capacity = option.capacity.max_volume_m3
-        if schedule.available_volume_m3 is not None:
-            volume_capacity = schedule.available_volume_m3 if volume_capacity is None else min(volume_capacity, schedule.available_volume_m3)
-        if volume_capacity is not None:
-            utilization = max(utilization, shipment.volume_m3 / volume_capacity)
-        return utilization
+    def _finish(self, expansions: int, generated: int, retained: list[CandidatePath], rejected: list[PathRejection], exhausted: bool) -> None:
+        self.last_diagnostics = PathSearchDiagnostics(
+            expansions=expansions,
+            generated_candidates=generated,
+            retained_candidates=len(retained),
+            rejected=rejected,
+            expansion_budget_exhausted=exhausted,
+        )
 
 
 def shipment_timing_ok(shipment: Shipment) -> bool:
