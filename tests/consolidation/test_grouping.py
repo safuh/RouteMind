@@ -8,13 +8,12 @@ from routemind.consolidation.grouping import (
     reject_unknown_shipments,
 )
 from routemind.consolidation.models import ConsolidationRejectionReason
-from routemind.domain.models import Location, Shipment
+from routemind.domain.models import Location, Package, Shipment, TransportLeg, TransportMode
 from routemind.paths.models import CandidatePath
 
 
 def shipment(id_: str) -> Shipment:
     location = Location(id="NBO", name="Nairobi")
-    from routemind.domain.models import Package
     return Shipment(
         id=id_, origin=location, destination=location,
         packages=[Package(id=f"P-{id_}", weight_kg=1, length_m=.1, width_m=.1, height_m=.1)],
@@ -24,10 +23,21 @@ def shipment(id_: str) -> Shipment:
 
 
 def candidate(shipment_id: str, marker: str) -> CandidatePath:
+    location = Location(id="NBO", name="Nairobi")
+    departure = datetime(2026, 8, 27, 8, tzinfo=UTC)
+    leg = TransportLeg(
+        option_id=f"OPT-{marker}",
+        origin=location,
+        destination=location,
+        departure_at=departure,
+        arrival_at=departure,
+        allocated_weight_kg=1,
+        allocated_volume_m3=.001,
+    )
     return CandidatePath(
-        shipment_id=shipment_id, legs=(), total_cost=Decimal(marker), currency="KES",
+        shipment_id=shipment_id, legs=(leg,), total_cost=Decimal(marker), currency="KES",
         transit_seconds=0, waiting_seconds=0, number_of_transfers=0,
-        reliability=1.0, modes=(), providers=(), capacity_utilization=0.0,
+        reliability=1.0, modes=(TransportMode.TRUCK,), providers=("P",), capacity_utilization=0.0,
         deadline_feasible=True,
     )
 
