@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from heapq import heappop, heappush
 
-from routemind.domain.models import Shipment, TransportLeg, TransportOption, TransportSchedule, TransportMode
+from routemind.domain.models import Shipment, TransportLeg, TransportOption
 from routemind.domain.validation import transport_can_carry_shipment
 
 
@@ -29,13 +29,11 @@ class _State:
 class PathSearchEngine:
     """Enumerate feasible transportation strategies for one shipment.
 
-    This is deliberately a candidate generator, not the final optimizer. It
-    keeps multiple feasible alternatives so a later consolidation/optimization
-    layer can choose among them.
+    This is a candidate generator, not the final optimizer. It keeps multiple
+    feasible alternatives so consolidation and optimization can choose later.
     """
 
     def __init__(self, options: list[TransportOption], config: PathSearchConfig | None = None) -> None:
-        self._options = options
         self._config = config or PathSearchConfig()
         self._by_origin: dict[str, list[TransportOption]] = {}
         for option in options:
@@ -43,25 +41,18 @@ class PathSearchEngine:
                 self._by_origin.setdefault(option.origin.id, []).append(option)
 
     def discover(self, shipment: Shipment) -> list[TransportLeg]:
-        """Return the cheapest-first feasible path represented as flattened legs.
-
-        For a full candidate set use ``discover_paths``. This convenience method
-        returns the best candidate or an empty list when no candidate exists.
-        """
+        """Return the cheapest-first feasible candidate, or an empty list."""
         paths = self.discover_paths(shipment)
         return list(paths[0]) if paths else []
 
     def discover_paths(self, shipment: Shipment) -> list[tuple[TransportLeg, ...]]:
-        """Discover feasible direct and multi-leg paths."""
+        """Discover feasible direct and multi-leg paths in cost order."""
         if not shipment_timing_ok(shipment):
             return []
 
         queue: list[tuple[float, int, _State]] = []
         counter = 0
-        heappush(
-            queue,
-            (0.0, counter, _State(shipment.origin.id, shipment.ready_at, (), 0.0, 1.0)),
-        )
+        heappush(queue, (0.0, counter, _State(shipment.origin.id, shipment.ready_at, (), 0.0, 1.0)))
         candidates: list[tuple[TransportLeg, ...]] = []
         seen: set[tuple[str, datetime, tuple[str, ...]]] = set()
 
@@ -73,10 +64,13 @@ class PathSearchEngine:
             if len(state.legs) >= self._config.max_legs:
                 continue
 
+            used_option_ids = {leg.option_id for leg in state.legs}
             for option in self._by_origin.get(state.location_id, []):
-                if not transport_can_carry_shipment(shipment, option):
+                # An option cannot be reused within one candidate. This prevents
+                # cycles, including self-loop/final-mile services.
+                if option.id in used_option_ids:
                     continue
-                if state.legs and option.mode == state.legs[-1].option_id:
+                if not transport_can_carry_shipment(shipment, option):
                     continue
 
                 for schedule in option.schedules:
@@ -86,6 +80,7 @@ class PathSearchEngine:
                         continue
                     if shipment.deadline and schedule.arrival_at > shipment.deadline:
                         continue
+
                     reliability = state.reliability * option.reliability
                     if reliability < self._config.min_reliability:
                         continue
@@ -106,14 +101,12 @@ class PathSearchEngine:
                     seen.add(key)
                     counter += 1
                     cost = state.cost + float(option.price.amount)
+                    priority = cost + schedule.transit_seconds / 3600 * 0.01
                     heappush(
                         queue,
-                        (
-                            cost + schedule.transit_seconds / 3600 * 0.01,
-                            counter,
-                            _State(option.destination.id, schedule.arrival_at, state.legs + (leg,), cost, reliability),
-                        ),
+                        (priority, counter, _State(option.destination.id, schedule.arrival_at, state.legs + (leg,), cost, reliability)),
                     )
+
         return candidates
 
 
