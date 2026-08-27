@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from heapq import heappop, heappush
 
@@ -58,7 +58,11 @@ class PathSearchEngine:
     def __init__(self, options: list[TransportOption], config: PathSearchConfig | None = None) -> None:
         self._config = config or PathSearchConfig()
         self._by_origin: dict[str, list[TransportOption]] = {}
+        self._options: dict[str, TransportOption] = {}
         for option in options:
+            if option.id in self._options:
+                raise ValueError(f"Duplicate transport option: {option.id}")
+            self._options[option.id] = option
             if option.available:
                 self._by_origin.setdefault(option.origin.id, []).append(option)
 
@@ -79,16 +83,7 @@ class PathSearchEngine:
             (
                 Decimal("0"),
                 counter,
-                _State(
-                    shipment.origin.id,
-                    shipment.ready_at,
-                    (),
-                    Decimal("0"),
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                ),
+                _State(shipment.origin.id, shipment.ready_at, (), Decimal("0"), 1.0, 0.0, 0.0, 0.0),
             ),
         )
         candidates: list[CandidatePath] = []
@@ -156,9 +151,9 @@ class PathSearchEngine:
                         )
                         utilization = max(utilization, shipment.volume_m3 / volume_capacity)
 
-                    transfer_wait = 0.0
-                    if state.legs:
-                        transfer_wait = (schedule.departure_at - state.legs[-1].arrival_at).total_seconds()
+                    waiting = (schedule.departure_at - state.ready_at).total_seconds()
+                    if waiting < 0:
+                        continue
 
                     cost = state.cost + self._price_for_shipment(option, shipment)
                     if state.legs:
@@ -171,7 +166,7 @@ class PathSearchEngine:
                         cost,
                         reliability,
                         state.transit_seconds + schedule.transit_seconds,
-                        state.waiting_seconds + transfer_wait,
+                        state.waiting_seconds + waiting,
                         max(state.capacity_utilization, utilization),
                     )
                     counter += 1
@@ -192,24 +187,18 @@ class PathSearchEngine:
             waiting_seconds=state.waiting_seconds,
             number_of_transfers=max(0, len(state.legs) - 1),
             reliability=state.reliability,
-            modes=tuple(self._option_by_id(leg.option_id).mode for leg in state.legs),
-            providers=tuple(self._option_by_id(leg.option_id).provider_id for leg in state.legs),
+            modes=tuple(self._options[leg.option_id].mode for leg in state.legs),
+            providers=tuple(self._options[leg.option_id].provider_id for leg in state.legs),
             capacity_utilization=state.capacity_utilization,
             deadline_feasible=shipment.deadline is None or state.legs[-1].arrival_at <= shipment.deadline,
             metadata={
                 "search": "time_dependent",
-                "pricing": "schedule-independent option pricing",
+                "pricing": "shipment_evaluable",
             },
         )
 
-    def _options_by_id(self) -> dict[str, TransportOption]:
-        return {option.id: option for options in self._by_origin.values() for option in options}
-
-    def _option_by_id(self, option_id: str) -> TransportOption:
-        return self._options_by_id()[option_id]
-
     def _currency_for(self, legs: tuple[TransportLeg, ...]) -> str:
-        currencies = {self._option_by_id(leg.option_id).price.currency for leg in legs}
+        currencies = {self._options[leg.option_id].price.currency for leg in legs}
         if len(currencies) != 1:
             raise ValueError("Candidate paths cannot combine transport prices in different currencies")
         return currencies.pop()
@@ -256,19 +245,16 @@ class PathSearchEngine:
         if shipment.deadline and schedule.arrival_at > shipment.deadline:
             return False
         if state.legs:
-            minimum_departure = state.legs[-1].arrival_at
-            minimum_departure = minimum_departure.replace() + __import__("datetime").timedelta(
-                seconds=self._config.min_transfer_seconds
-            )
+            minimum_departure = state.legs[-1].arrival_at + timedelta(seconds=self._config.min_transfer_seconds)
             if schedule.departure_at < minimum_departure:
                 return False
         return self._price_supported(option)
 
     @staticmethod
     def _price_supported(option: TransportOption) -> bool:
-        # A per-km rate cannot be evaluated correctly without route distance.
-        # The distance-aware pricing layer will be introduced with richer graph
-        # edges; until then, only shipment-evaluable pricing models are searched.
+        # Per-km pricing cannot be evaluated correctly until transport distance
+        # is attached to the service/graph model. It is therefore excluded
+        # rather than silently treating a rate as a total price.
         return option.price.model.value in {"fixed", "per_kg", "per_volume", "quoted"}
 
     @staticmethod
