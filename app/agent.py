@@ -5,6 +5,7 @@ from google.adk.apps import App
 from google.adk.models import Gemini
 
 from app.tools import (
+    explain_optimization_result,
     extract_optimization_policy,
     optimize_portfolio_json,
     summarize_result,
@@ -26,7 +27,8 @@ Rules:
   optimization result is required.
 - Treat supplied candidate paths, transport options, and consolidation
   opportunities as authoritative synthetic/domain data.
-- Explain trade-offs after the deterministic tool returns a result.
+- Explain trade-offs only from deterministic tool output. Prefer the factual
+  explanation tool after optimization.
 - If required structured inputs are missing, ask for them instead of guessing.
 - Clearly label synthetic benchmark data as synthetic.
 - When a result is infeasible, explain the returned warnings and do not invent
@@ -42,6 +44,7 @@ root_agent = Agent(
         optimize_portfolio_json,
         validate_optimization_result,
         summarize_result,
+        explain_optimization_result,
     ],
 )
 
