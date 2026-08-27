@@ -221,42 +221,25 @@ Businesses can optimize for different objectives:
 - Minimum cost
 - Minimum delivery time
 - Maximum reliability
+- Maximum internal fleet utilization
 - Minimum carbon footprint
 - Balanced cost / speed / reliability
+- Premium delivery
 - Capacity preservation
 
----
+## 7. Dynamic Re-optimization
 
-# Deterministic Optimization
+Eventually, events such as these will trigger re-planning:
 
-M5 uses Google OR-Tools CP-SAT for portfolio-level assignment. Candidate paths are decision alternatives; the solver selects exactly one path per shipment while enforcing capacity on exact scheduled transport instances. Consolidation opportunities can contribute savings only when the selected paths actually contain the shared scheduled segments. Provider availability is enforced before solving.
-
-The optimizer is independent of Google ADK. This keeps the LLM out of feasibility, capacity, pricing and optimization decisions.
-
-# Local Google ADK Agent
-
-The M6 agent is in `app/`. It is an orchestration and explanation layer over the deterministic engines.
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e '.[agents,dev]'
-adk web
-```
-
-Then open the local ADK playground and select the `app` agent. Configure the Gemini/Google credentials required by your installed ADK version before making model-backed requests.
-
-The agent exposes structured tools for:
-
-- business-objective extraction
-- deterministic portfolio optimization
-- result validation
-- factual result summarization
-- grounded infeasibility/trade-off explanation
-
-It must not invent missing logistics data. Candidate paths, schedules, capacities, prices and provider facts must come from structured inputs.
-
-See `app/README.md` for the local workflow.
+- Vehicle breakdown
+- Bus cancellation
+- Train delay
+- Flight cancellation
+- Capacity reduction
+- New urgent order
+- Road closure
+- Provider price change
+- Unexpected demand
 
 ---
 
@@ -294,6 +277,448 @@ shipment\ compatibility = true
 transport\ availability = true
 \]
 
-The project will progressively incorporate multimodal path optimization, shipment consolidation, scheduling, assignment optimization, multi-objective optimization and dynamic re-optimization.
+The project will progressively incorporate:
+
+- Shortest-path optimization
+- Shipment consolidation
+- Capacitated Vehicle Routing Problem (CVRP)
+- Vehicle Routing Problem with Time Windows (VRPTW)
+- Multimodal path optimization
+- Scheduling
+- Assignment optimization
+- Bin-packing / loading constraints
+- Multi-objective optimization
+- Dynamic re-optimization
 
 Google OR-Tools is the initial optimization technology; the optimization layer remains independent of Google ADK.
+
+---
+
+# Agent Architecture
+
+The initial Google ADK implementation will deliberately remain small.
+
+```text
+                         Root / Logistics Manager
+                                  Agent
+                                    │
+                 ┌──────────────────┼──────────────────┐
+                 ▼                  ▼                  ▼
+          Shipment Analysis   Transport Discovery   Policy Analysis
+                 │                  │                  │
+                 └──────────────────┼──────────────────┘
+                                    ▼
+                         Multimodal Optimizer
+                                    │
+                                    ▼
+                           Solution Validator
+                                    │
+                                    ▼
+                        Recommendation / Explanation
+```
+
+Agents will use typed tools rather than directly manipulating optimization internals.
+
+Initial tools are expected to include:
+
+```text
+get_shipments()
+discover_transport_options()
+build_transport_graph()
+find_candidate_paths()
+find_shared_segments()
+consolidate_shipments()
+allocate_capacity()
+optimize_transport_plan()
+validate_solution()
+calculate_plan_metrics()
+```
+
+---
+
+# Initial Domain Model
+
+The core domain will evolve around these concepts:
+
+```text
+Shipment
+Package
+Product
+Origin
+Destination
+Hub
+TransportProvider
+TransportOption
+TransportLeg
+TransportSchedule
+TransportCapacity
+TransportPrice
+TransportConstraint
+TransportPlan
+OptimizationPolicy
+OptimizationResult
+RouteSegment
+ConsolidationGroup
+```
+
+A transport option is intentionally broader than a vehicle:
+
+```python
+TransportOption(
+    mode="bus",
+    provider="Provider X",
+    origin="Nairobi",
+    destination="Kisumu",
+    departure_time="08:00",
+    arrival_time="14:30",
+    max_weight_kg=100,
+    price_model="per_kg",
+    reliability=0.94,
+)
+```
+
+A multimodal plan can then contain several legs:
+
+```python
+TransportPlan(
+    shipment_id="S123",
+    legs=[
+        TransportLeg(...),
+        TransportLeg(...),
+        TransportLeg(...),
+    ],
+)
+```
+
+---
+
+# Development Roadmap
+
+## Milestone 0 — Foundation and Specification
+
+**Status: In progress**
+
+Deliverables:
+
+- Product definition
+- Architecture
+- Domain model
+- Optimization formulation
+- Repository structure
+- Development standards
+- Evaluation strategy
+
+## Milestone 1 — Multimodal Domain Core
+
+- Pydantic domain models
+- Shipment models
+- Transport provider models
+- Transport options
+- Schedules
+- Capacity models
+- Pricing models
+- Constraints
+- Synthetic dataset generator
+
+## Milestone 2 — Transportation Graph
+
+- Geographic nodes
+- Transport edges
+- Road/service segments
+- Scheduled transport edges
+- Hub representation
+- Cost/time/reliability attributes
+- Multimodal graph construction
+
+## Milestone 3 — Path Discovery
+
+- Direct paths
+- Multileg paths
+- Multimodal paths
+- Feasibility filtering
+- Transfer constraints
+- Time-dependent paths
+
+## Milestone 4 — Consolidation Engine
+
+- Shared destination detection
+- Shared segment detection
+- Compatibility analysis
+- Capacity aggregation
+- Consolidation savings
+- Hub-and-spoke opportunities
+
+## Milestone 5 — Optimization Engine
+
+- Baseline algorithms
+- OR-Tools integration
+- Capacity constraints
+- Time windows
+- Scheduling
+- Cost optimization
+- Multi-objective optimization
+
+## Milestone 6 — Google ADK Integration
+
+- Root agent
+- Shipment analysis agent/tooling
+- Transport discovery tooling
+- Optimization tooling
+- Validation tooling
+- Structured outputs
+- Agent evaluation
+
+## Milestone 7 — Dynamic Optimization
+
+- Event model
+- Delay handling
+- Cancellation handling
+- Capacity changes
+- New-order insertion
+- Re-optimization
+
+## Milestone 8 — Predictive Intelligence
+
+- ETA prediction
+- Demand forecasting
+- Carrier reliability prediction
+- Capacity forecasting
+- Delay prediction
+- Cost forecasting
+
+## Milestone 9 — Production Platform
+
+- FastAPI API
+- PostgreSQL
+- Redis
+- Authentication / RBAC
+- Multi-tenancy
+- Observability
+- Audit logging
+- Docker
+- CI/CD
+- Cloud deployment
+
+---
+
+# Evaluation Strategy
+
+RouteMind will not be evaluated by whether an LLM produces a convincing explanation.
+
+It will be evaluated using measurable logistics outcomes.
+
+### Baselines
+
+1. Independent direct routing
+2. Nearest-neighbor routing
+3. Unconsolidated shipment planning
+4. Deterministic optimization
+5. Agent + deterministic optimization
+
+### Metrics
+
+| Category | Metrics |
+|---|---|
+| Cost | Total transport cost, cost/shipment |
+| Distance | Total distance, empty distance |
+| Time | Transit time, lateness |
+| Service | On-time %, deadline violations |
+| Capacity | Weight utilization, volume utilization |
+| Consolidation | Shared segments, consolidated shipments |
+| Fleet | Vehicles/resources used |
+| Reliability | Expected and realized failures |
+| Sustainability | Estimated emissions |
+| Compute | Optimization runtime |
+| Agent | Tool accuracy, constraint adherence |
+
+Every major optimizer improvement should have benchmark scenarios demonstrating whether it actually improves the solution.
+
+---
+
+# Example Scenario
+
+Suppose a marketplace has five shipments:
+
+```text
+A → Kisumu   8 kg
+B → Kisumu   5 kg
+C → Kakamega 12 kg
+D → Eldoret  10 kg
+E → Eldoret  7 kg
+```
+
+Available transport includes:
+
+```text
+Nairobi → Nakuru     Truck
+Nairobi → Kisumu     Bus
+Nakuru → Kisumu      Van
+Nakuru → Eldoret     Truck
+Kisumu → Customer    Motorcycle
+Eldoret → Customer   Motorcycle
+```
+
+RouteMind should not independently select transportation for A–E.
+
+It should identify opportunities such as:
+
+```text
+Nairobi
+   │
+   │ shared truck
+   ▼
+Nakuru
+   ├──────────────► Kisumu ──► motorcycles
+   │
+   └──────────────► Eldoret ──► motorcycles
+```
+
+and compare that against direct and alternative multimodal plans.
+
+The result should explain **why** a plan is preferred:
+
+```text
+Recommended strategy:
+
+- Consolidate A+B for the Kisumu flow.
+- Consolidate D+E for the Eldoret flow.
+- Use the shared Nairobi→Nakuru truck segment.
+- Use local motorcycles for final-mile delivery.
+
+Expected trade-off:
+- Lower transport cost
+- Higher shared-segment utilization
+- Additional transfer handling
+- Longer transit than premium direct transport
+```
+
+The numerical result must come from the optimizer, not from the LLM.
+
+---
+
+# Technology Direction
+
+### Core
+
+- Python 3.12+
+- Pydantic
+- Google ADK
+- Google Gemini models through ADK
+- Google OR-Tools
+- NetworkX initially where appropriate
+
+### Backend — later milestone
+
+- FastAPI
+- PostgreSQL
+- SQLAlchemy
+- Alembic
+- Redis
+
+### Testing
+
+- pytest
+- property-based testing where useful
+- optimization benchmark scenarios
+- agent evaluation
+
+### Production
+
+- Docker
+- GitHub Actions
+- Google Cloud
+- Cloud Run
+- Cloud SQL
+- observability / tracing
+
+The architecture will keep the **optimization core independent from the API and agent framework**.
+
+---
+
+# Design Principles
+
+1. **Transport, not vehicles, is the core abstraction.**
+2. **Optimization must be deterministic and measurable.**
+3. **LLMs orchestrate; solvers enforce mathematical constraints.**
+4. **Multimodal journeys are first-class.**
+5. **Shared transportation segments are explicitly modeled.**
+6. **Consolidation is an optimization decision, not a preprocessing assumption.**
+7. **A business does not need to own transportation capacity.**
+8. **Policies and objectives must be configurable.**
+9. **Every recommendation must be explainable through its underlying data and optimization result.**
+10. **The model must scale from last-mile delivery to intercontinental freight.**
+11. **Benchmark every major optimization change.**
+12. **Do not use an LLM where a deterministic algorithm is more reliable.**
+
+---
+
+# Current Status
+
+| Component | Status |
+|---|---|
+| Product definition | Complete |
+| Multimodal architecture | Defined |
+| Domain model | Initial specification |
+| Optimization formulation | Initial specification |
+| Repository | Active |
+| Synthetic data | Planned |
+| Transport graph | Planned |
+| Path discovery | Planned |
+| Consolidation | Planned |
+| Optimizer | Planned |
+| Google ADK agents | Planned |
+| Dynamic optimization | Planned |
+| Predictive ML | Planned |
+| Production API | Planned |
+
+---
+
+# Portfolio Objective
+
+RouteMind is deliberately designed as a substantial AI engineering and operations-research portfolio project rather than a chatbot demonstration.
+
+It demonstrates:
+
+- Agentic AI with Google ADK
+- LLM tool orchestration
+- Operations research
+- Constraint optimization
+- Graph algorithms
+- Multimodal transportation modeling
+- Scheduling
+- Combinatorial optimization
+- Machine learning
+- Backend engineering
+- Testing and evaluation
+- Cloud deployment
+- Production architecture
+
+The intended progression is:
+
+```text
+Mathematical Model
+       ↓
+Optimization Core
+       ↓
+Synthetic Benchmarking
+       ↓
+Google ADK Agent Layer
+       ↓
+Dynamic Logistics Intelligence
+       ↓
+Production API / Platform
+```
+
+---
+
+# License
+
+TBD during the initial engineering phase.
+
+---
+
+## Project Status
+
+**Active development — Milestone 0 / Foundation**
+
+RouteMind is being developed incrementally. The repository intentionally prioritizes a correct, testable optimization model before building a user interface or production SaaS layer.
