@@ -4,7 +4,7 @@
 
 **Current phase:** Milestone 4 — Shipment Consolidation
 
-**Overall status:** ~52% — M3 implementation remains validation-pending; M4 now has deterministic shared-segment detection, consolidation feasibility, capacity aggregation, cargo checks, and pricing economics.
+**Overall status:** ~55% — M3 implementation remains validation-pending; M4 now has deterministic shared-segment detection, consolidation feasibility, capacity aggregation, cargo checks, pricing economics, and shipment-group/candidate-path enumeration.
 
 | Milestone | Area | Status |
 |---|---|---:|
@@ -61,9 +61,9 @@
 - [ ] Benchmark/performance evidence is executed and recorded.
 
 # M4 — Shipment Consolidation
-**Status: 🟡 First brick implemented; validation pending**
+**Status: 🟡 First grouping brick implemented; validation pending**
 
-## Implemented in first brick
+## Implemented
 - [x] Concrete scheduled shared-segment identity
 - [x] Shared-segment detection across candidate paths
 - [x] Different destinations can share an upstream segment
@@ -78,11 +78,16 @@
 - [x] Three-shipment aggregation without pairwise-only assumptions
 - [x] Consolidation domain documentation
 - [x] Deterministic consolidation tests for core scenarios
+- [x] Deterministic shipment subset generation
+- [x] Candidate-path grouping by shipment
+- [x] Candidate-path Cartesian expansion for shipment groups
+- [x] Configurable minimum/maximum group size
+- [x] Duplicate shipment ID normalization
+- [x] Unknown-shipment diagnostics
 
 ## Remaining
 - [ ] Execute consolidation tests in CI/runtime environment
 - [ ] Capacity reservation across competing consolidation opportunities
-- [ ] Shipment grouping/candidate subset generation
 - [ ] Explicit end-to-end time-window compatibility model
 - [ ] Transfer handling allocation for shared/unshared downstream legs
 - [ ] Hub-and-spoke opportunity generation
@@ -110,7 +115,7 @@
 - [ ] Agent regression and grounding tests
 
 # M7 — Dynamic Re-optimization
-**Status: ⬜ Not started**
+**Status: ⬜ Not started
 - [ ] Disruption/event model
 - [ ] Impact analysis
 - [ ] Alternative discovery
@@ -156,3 +161,4 @@
 | 2026-08-27 | M4 consolidation domain models and scheduled shared-segment detection added |
 | 2026-08-27 | Consolidation feasibility, capacity aggregation, cargo checks and deterministic economics added |
 | 2026-08-27 | Core M4 consolidation scenarios documented and covered by automated tests |
+| 2026-08-27 | Deterministic shipment grouping and candidate-path enumeration added |
