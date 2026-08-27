@@ -1,4 +1,4 @@
-"""Feasible multimodal shipment path discovery and candidate modeling."""
+"""Feasible multimodal shipment path discovery and consolidation analysis."""
 
 from .diagnostics import PathRejection, PathSearchDiagnostics, RejectionReason
 from .dominance import remove_dominated_paths
