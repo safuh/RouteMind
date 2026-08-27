@@ -144,11 +144,14 @@ class PathSearchEngine:
                         available_weight if available_weight is not None else option.capacity.max_weight_kg,
                     )
                     utilization = shipment.weight_kg / weight_capacity
-                    if option.capacity.max_volume_m3 is not None:
-                        volume_capacity = min(
-                            option.capacity.max_volume_m3,
-                            available_volume if available_volume is not None else option.capacity.max_volume_m3,
+                    volume_capacity = option.capacity.max_volume_m3
+                    if available_volume is not None:
+                        volume_capacity = (
+                            available_volume
+                            if volume_capacity is None
+                            else min(volume_capacity, available_volume)
                         )
+                    if volume_capacity is not None:
                         utilization = max(utilization, shipment.volume_m3 / volume_capacity)
 
                     waiting = (schedule.departure_at - state.ready_at).total_seconds()
