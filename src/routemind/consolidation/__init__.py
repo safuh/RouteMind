@@ -13,6 +13,7 @@ from .models import (
     ConsolidationRejectionReason,
     SharedTransportSegment,
 )
+from .time_windows import check_group_time_windows, check_path_time_window
 
 __all__ = [
     "ConsolidationOpportunity",
@@ -20,6 +21,8 @@ __all__ = [
     "ConsolidationRejectionReason",
     "SharedTransportSegment",
     "candidate_paths_by_shipment",
+    "check_group_time_windows",
+    "check_path_time_window",
     "detect_shared_segments",
     "evaluate_consolidation",
     "generate_consolidation_groups",
