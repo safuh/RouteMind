@@ -24,6 +24,7 @@ from .models import CandidatePath
 class PathSearchConfig:
     max_legs: int = 4
     max_candidates: int = 10
+    max_expansions: int = 10_000
     min_reliability: float = 0.0
     min_transfer_seconds: int = 0
     transfer_handling_cost: Decimal = Decimal("0")
@@ -72,7 +73,7 @@ class PathSearchEngine:
         return paths[0] if paths else None
 
     def discover_paths(self, shipment: Shipment) -> list[CandidatePath]:
-        """Discover multiple feasible direct and multi-leg candidate paths."""
+        """Discover feasible direct and multi-leg candidates."""
         if not shipment_timing_ok(shipment):
             return []
 
@@ -88,9 +89,11 @@ class PathSearchEngine:
         )
         candidates: list[CandidatePath] = []
         seen: set[tuple[str, datetime, tuple[str, ...]]] = set()
+        expansions = 0
 
-        while queue and len(candidates) < self._config.max_candidates:
+        while queue and expansions < self._config.max_expansions:
             _, _, state = heappop(queue)
+            expansions += 1
             if state.location_id == shipment.destination.id and state.legs:
                 candidates.append(self._build_candidate(shipment, state))
                 continue
@@ -176,9 +179,8 @@ class PathSearchEngine:
                     priority = cost + Decimal(str(schedule.transit_seconds / 3600 * 0.01))
                     heappush(queue, (priority, counter, next_state))
 
-        if self._config.remove_dominated:
-            return remove_dominated_paths(candidates)
-        return candidates
+        retained = remove_dominated_paths(candidates) if self._config.remove_dominated else candidates
+        return retained[: self._config.max_candidates]
 
     def _build_candidate(self, shipment: Shipment, state: _State) -> CandidatePath:
         return CandidatePath(
