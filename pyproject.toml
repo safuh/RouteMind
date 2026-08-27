@@ -33,7 +33,7 @@ dev = [
 routemind = "routemind.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/routemind"]
+packages = ["src/routemind", "app"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"
