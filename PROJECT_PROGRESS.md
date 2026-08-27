@@ -4,7 +4,7 @@
 
 **Current phase:** Milestone 4 — Shipment Consolidation
 
-**Overall status:** ~55% — M3 implementation remains validation-pending; M4 now has deterministic shared-segment detection, consolidation feasibility, capacity aggregation, cargo checks, pricing economics, and shipment-group/candidate-path enumeration.
+**Overall status:** ~57% — M3 implementation remains validation-pending; M4 now has deterministic shared-segment detection, consolidation feasibility, capacity aggregation, cargo checks, pricing economics, shipment-group/candidate-path enumeration, and explicit shipment time-window validation.
 
 | Milestone | Area | Status |
 |---|---|---:|
@@ -61,7 +61,7 @@
 - [ ] Benchmark/performance evidence is executed and recorded.
 
 # M4 — Shipment Consolidation
-**Status: 🟡 First grouping brick implemented; validation pending**
+**Status: 🟡 Grouping/time-window brick implemented; validation pending**
 
 ## Implemented
 - [x] Concrete scheduled shared-segment identity
@@ -84,11 +84,13 @@
 - [x] Configurable minimum/maximum group size
 - [x] Duplicate shipment ID normalization
 - [x] Unknown-shipment diagnostics
+- [x] Shipment readiness vs candidate departure validation
+- [x] Shipment deadline vs candidate arrival validation
+- [x] Preservation of pre-existing CandidatePath deadline feasibility
 
 ## Remaining
 - [ ] Execute consolidation tests in CI/runtime environment
 - [ ] Capacity reservation across competing consolidation opportunities
-- [ ] Explicit end-to-end time-window compatibility model
 - [ ] Transfer handling allocation for shared/unshared downstream legs
 - [ ] Hub-and-spoke opportunity generation
 - [ ] Consolidation-vs-direct portfolio comparison
@@ -115,7 +117,7 @@
 - [ ] Agent regression and grounding tests
 
 # M7 — Dynamic Re-optimization
-**Status: ⬜ Not started
+**Status: ⬜ Not started**
 - [ ] Disruption/event model
 - [ ] Impact analysis
 - [ ] Alternative discovery
@@ -162,3 +164,4 @@
 | 2026-08-27 | Consolidation feasibility, capacity aggregation, cargo checks and deterministic economics added |
 | 2026-08-27 | Core M4 consolidation scenarios documented and covered by automated tests |
 | 2026-08-27 | Deterministic shipment grouping and candidate-path enumeration added |
+| 2026-08-27 | Explicit consolidation time-window compatibility checks and tests added |
