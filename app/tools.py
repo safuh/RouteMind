@@ -6,8 +6,8 @@ import json
 from typing import Any
 
 from routemind.domain.models import OptimizationPolicy, OptimizationResult, TransportOption
-from routemind.paths.models import CandidatePath
 from routemind.optimization import optimize_portfolio
+from routemind.paths.models import CandidatePath
 
 
 def extract_optimization_policy(request: str) -> dict[str, Any]:
