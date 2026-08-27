@@ -4,7 +4,7 @@
 
 **Current phase:** Milestone 3 — Candidate Path Discovery
 
-**Overall status:** ~35% — Foundation, domain, synthetic data, graph construction, and initial path discovery established.
+**Overall status:** ~42% — Foundation, domain, synthetic data, graph construction, and optimization-grade candidate path modeling established; M3 benchmarking and rejection diagnostics remain.
 
 ## Status Legend
 - ⬜ Not started
@@ -69,30 +69,43 @@ A milestone is complete only when implementation, automated tests, representativ
 - [x] Deadline-aware filtering
 - [x] Weight-capacity filtering
 - [x] Volume-capacity filtering
+- [x] Schedule-specific remaining-capacity filtering
 - [x] Availability filtering
 - [x] Reliability threshold
 - [x] Maximum-leg constraint
 - [x] Candidate limit
 - [x] Cost-ordered candidate generation
 - [x] Cycle/reuse protection
-- [x] Path-discovery tests
+- [x] Explicit transfer-time constraint
+- [x] Transfer handling cost
+- [x] Cargo compatibility restrictions
+- [x] Provider allow/deny policy
+- [x] Mode allow/deny policy
+- [x] Maximum transfer policy
+- [x] Dominated-path elimination
+- [x] Multi-objective Pareto preservation
+- [x] Explicit CandidatePath result model with cost/time/reliability metrics
+- [x] Initial/wait and transfer-wait metrics
+- [x] Capacity utilization metric
+- [x] Candidate path invariants and continuity validation
+- [x] Shipment-evaluable fixed, quoted, per-kg and per-volume pricing
+- [x] Explicit rejection of distance-based pricing until distance is modeled
+- [x] Path package documentation
+- [x] Automated tests for new path capabilities
 
 ## Remaining
-- [ ] Explicit transfer-time constraints
-- [ ] Cargo compatibility constraints
-- [ ] Provider/mode restrictions
-- [ ] Maximum transfer policy
-- [ ] Dominated-path elimination
-- [ ] Better multi-objective candidate ranking
-- [ ] Explicit path result model with cost/time/reliability metrics
 - [ ] Candidate explanation / rejection reasons
+- [ ] Distance-aware pricing and emissions metrics
+- [ ] Provider-specific transfer compatibility semantics
 - [ ] Benchmark against baseline search
+- [ ] Search performance instrumentation
 
 ### M3 exit criteria
 - [x] A shipment can receive multiple feasible strategies.
 - [x] Direct and multimodal services are considered.
 - [x] Time, deadline and capacity constraints are respected.
-- [ ] Candidates include complete decision metrics and explainability.
+- [x] Candidates include complete core decision metrics and Pareto filtering.
+- [ ] Candidates expose full rejection/explanation diagnostics.
 - [ ] Search performance is benchmarked.
 
 # M4 — Shipment Consolidation
@@ -229,3 +242,6 @@ A milestone is complete only when implementation, automated tests, representativ
 | 2026-08-26 | Time-dependent multimodal graph models and builder added |
 | 2026-08-27 | Time-dependent capacity/deadline-aware candidate path search added |
 | 2026-08-27 | Path discovery tests added and cycle protection corrected |
+| 2026-08-27 | Optimization-grade CandidatePath model and path metrics added |
+| 2026-08-27 | Transfer constraints, cargo compatibility, provider/mode policies and transfer costs added |
+| 2026-08-27 | Pareto dominance filtering and path-model validation tests added |
