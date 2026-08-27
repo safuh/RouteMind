@@ -73,7 +73,8 @@ A milestone is complete only when implementation, automated tests, representativ
 - [x] Availability filtering
 - [x] Reliability threshold
 - [x] Maximum-leg constraint
-- [x] Candidate limit
+- [x] Candidate output limit
+- [x] Bounded search expansion budget
 - [x] Cost-ordered candidate generation
 - [x] Cycle/reuse protection
 - [x] Explicit transfer-time constraint
@@ -90,6 +91,7 @@ A milestone is complete only when implementation, automated tests, representativ
 - [x] Candidate path invariants and continuity validation
 - [x] Shipment-evaluable fixed, quoted, per-kg and per-volume pricing
 - [x] Explicit rejection of distance-based pricing until distance is modeled
+- [x] Schedule-specific volume capacity validation
 - [x] Path package documentation
 - [x] Automated tests for new path capabilities
 
@@ -245,3 +247,4 @@ A milestone is complete only when implementation, automated tests, representativ
 | 2026-08-27 | Optimization-grade CandidatePath model and path metrics added |
 | 2026-08-27 | Transfer constraints, cargo compatibility, provider/mode policies and transfer costs added |
 | 2026-08-27 | Pareto dominance filtering and path-model validation tests added |
+| 2026-08-27 | Search expansion budget separated from candidate output limit; schedule volume validation tightened |
