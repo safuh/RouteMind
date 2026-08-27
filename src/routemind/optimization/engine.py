@@ -30,24 +30,32 @@ def optimize_portfolio(
     consolidation_opportunities: Iterable[ConsolidationOpportunity] = (),
     max_time_seconds: float = 30.0,
 ) -> OptimizationResult:
-    """Choose one path per shipment while enforcing portfolio capacity.
+    """Choose one available path per shipment while enforcing portfolio capacity.
 
     CP-SAT owns the portfolio decision. Consolidation opportunities contribute a
     bonus only when the selected path for every participating shipment contains
     every exact scheduled segment in the opportunity.
     """
     policy = policy or OptimizationPolicy()
-    paths = tuple(path for path in candidate_paths if path.deadline_feasible)
+    raw_paths = tuple(path for path in candidate_paths if path.deadline_feasible)
+    unavailable_paths = tuple(
+        path for path in raw_paths
+        if any(
+            leg.option_id not in transport_options or not transport_options[leg.option_id].available
+            for leg in path.legs
+        )
+    )
+    paths = tuple(path for path in raw_paths if path not in unavailable_paths)
     opportunities = tuple(consolidation_opportunities)
     by_shipment: dict[str, list[int]] = defaultdict(list)
     for index, path in enumerate(paths):
         by_shipment[path.shipment_id].append(index)
 
     if not by_shipment or any(not indices for indices in by_shipment.values()):
-        return OptimizationResult(
-            plans=[], objective_value=0.0, feasible=False,
-            warnings=["No deadline-feasible candidate path exists for at least one shipment."],
-        )
+        warnings = ["No available, deadline-feasible candidate path exists for at least one shipment."]
+        if unavailable_paths:
+            warnings.append(f"Excluded {len(unavailable_paths)} candidate path(s) using unavailable or unknown services.")
+        return OptimizationResult(plans=[], objective_value=0.0, feasible=False, warnings=warnings)
 
     currencies = {path.currency for path in paths}
     if len(currencies) != 1:
@@ -126,8 +134,6 @@ def optimize_portfolio(
         opportunity_vars.append((op_var, opportunity))
         objective_terms.append(-_int(float(opportunity.savings) * policy.consolidation_weight) * op_var)
 
-    # A shipment can participate in at most one accepted consolidation
-    # opportunity. This prevents double-counting savings/resources.
     for variables in shipment_op_vars.values():
         model.add(sum(variables) <= 1)
 
@@ -173,6 +179,7 @@ def optimize_portfolio(
         plans=plans,
         objective_value=solver.objective_value / _SCALE,
         feasible=True,
+        warnings=[f"Excluded {len(unavailable_paths)} unavailable/unknown-service path(s)."] if unavailable_paths else [],
         metrics={
             "shipment_count": float(len(plans)),
             "total_cost": float(total_cost),
