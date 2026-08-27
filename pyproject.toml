@@ -20,7 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 agents = [
-    "google-adk>=1.0,<2",
+    "google-adk>=2.0,<3",
 ]
 dev = [
     "pytest>=8.3,<9",
@@ -33,7 +33,7 @@ dev = [
 routemind = "routemind.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/routemind"]
+packages = ["src/routemind", "app"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"
@@ -46,6 +46,7 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"

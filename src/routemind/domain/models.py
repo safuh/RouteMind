@@ -56,7 +56,7 @@ class Package(BaseModel):
 
     @property
     def volume_m3(self) -> float:
-        return self.length_m * self.width_m * self.height_m * self.quantity
+        return round(self.length_m * self.width_m * self.height_m * self.quantity, 12)
 
 
 class Shipment(BaseModel):
@@ -104,7 +104,7 @@ class TransportPrice(BaseModel):
 
 
 class TransportOption(BaseModel):
-    """A feasible transportation service or capacity offering."""
+    """A transportation service or capacity offering."""
 
     id: str
     provider_id: str
@@ -117,6 +117,7 @@ class TransportOption(BaseModel):
     price: TransportPrice
     reliability: float = Field(ge=0, le=1)
     available: bool = True
+    distance_km: NonNegativeFloat | None = None
     carbon_kg_co2e_per_km: NonNegativeFloat | None = None
     restrictions: set[str] = Field(default_factory=set)
 

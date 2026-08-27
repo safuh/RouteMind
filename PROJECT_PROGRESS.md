@@ -1,231 +1,156 @@
 # RouteMind — Project Progress Tracker
 
-> Living engineering tracker. Do not mark a component complete until implementation, tests, documentation, and validation evidence exist in the repository.
+> Living engineering tracker. Do not mark a component complete until implementation, automated tests, documentation, and validation evidence exist.
 
-**Current phase:** Milestone 3 — Candidate Path Discovery
+**Current phase:** Milestone 6 — Google ADK Agent Layer
 
-**Overall status:** ~35% — Foundation, domain, synthetic data, graph construction, and initial path discovery established.
+**Overall status:** ~74% — M3 remains validation-pending; M4 has deterministic consolidation and competing-capacity reservation; M5 now has a CP-SAT portfolio optimizer; M6 now has an ADK orchestration layer with structured deterministic tools and grounding-focused regression tests. Runtime/CI validation is still required before milestone completion.
 
-## Status Legend
-- ⬜ Not started
-- 🟡 In progress
-- 🟢 Complete
-- 🔴 Blocked
-- 🔵 Deferred / future phase
-
-### Completion standard
-A milestone is complete only when implementation, automated tests, representative scenarios, documentation, and quality checks are present.
-
-## Executive Progress
 | Milestone | Area | Status |
 |---|---|---:|
 | M0 | Product & architecture | 🟢 |
 | M1 | Multimodal domain + synthetic data | 🟢 |
 | M2 | Transportation graph | 🟢 |
 | M3 | Candidate path discovery | 🟡 |
-| M4 | Shipment consolidation | ⬜ |
-| M5 | Deterministic optimization | ⬜ |
-| M6 | Google ADK agent layer | ⬜ |
+| M4 | Shipment consolidation | 🟡 |
+| M5 | Deterministic optimization | 🟡 |
+| M6 | Google ADK agent layer | 🟡 |
 | M7 | Dynamic re-optimization | ⬜ |
 | M8 | Predictive logistics intelligence | ⬜ |
 | M9 | Production platform | ⬜ |
 
-# M0 — Product, Architecture & Engineering Foundation
-**Status: 🟢 Complete**
-- [x] Fleet-independent transportation abstraction
-- [x] Public transportation as first-class capacity
-- [x] Multimodal journeys
-- [x] Shared transportation segments
-- [x] Consolidation as an optimization decision
-- [x] Deterministic optimization separated from LLM orchestration
-- [x] Repository, README and Python package foundation
-
-# M1 — Multimodal Domain Core & Synthetic Data
-**Status: 🟢 Complete**
-- [x] Core shipment, package, location and transport models
-- [x] Capacity, schedule, pricing and reliability models
-- [x] Domain feasibility validation
-- [x] Synthetic locations, providers, services, schedules and shipments
-- [x] Reproducible scenarios and tests
-
-# M2 — Multimodal Transportation Graph
-**Status: 🟢 Complete**
-- [x] Location nodes
-- [x] Scheduled transport-service edges
-- [x] Provider, mode, cost, time and capacity metadata
-- [x] Multiple schedules represented independently
-- [x] Graph construction from transport options
-- [x] Graph validation and outgoing-edge lookup
-- [x] Graph tests and documentation
-
 # M3 — Candidate Path Discovery
-**Status: 🟡 In progress**
+**Status: 🟡 Implementation complete; validation evidence pending**
 
-## Implemented
-- [x] Direct path discovery
-- [x] Multi-hop path discovery
-- [x] Multimodal path discovery
-- [x] Time-dependent departure checks
-- [x] Deadline-aware filtering
-- [x] Weight-capacity filtering
-- [x] Volume-capacity filtering
-- [x] Availability filtering
-- [x] Reliability threshold
-- [x] Maximum-leg constraint
-- [x] Candidate limit
-- [x] Cost-ordered candidate generation
-- [x] Cycle/reuse protection
-- [x] Path-discovery tests
-
-## Remaining
-- [ ] Explicit transfer-time constraints
-- [ ] Cargo compatibility constraints
-- [ ] Provider/mode restrictions
-- [ ] Maximum transfer policy
-- [ ] Dominated-path elimination
-- [ ] Better multi-objective candidate ranking
-- [ ] Explicit path result model with cost/time/reliability metrics
-- [ ] Candidate explanation / rejection reasons
-- [ ] Benchmark against baseline search
-
-### M3 exit criteria
-- [x] A shipment can receive multiple feasible strategies.
-- [x] Direct and multimodal services are considered.
-- [x] Time, deadline and capacity constraints are respected.
-- [ ] Candidates include complete decision metrics and explainability.
-- [ ] Search performance is benchmarked.
+## Remaining validation
+- [ ] Execute full test suite in CI/runtime environment
+- [ ] Execute benchmark suite and capture runtime evidence
+- [ ] Produce search performance benchmark report
+- [ ] Add provider-specific transfer compatibility semantics
 
 # M4 — Shipment Consolidation
-**Status: ⬜ Not started**
-- [ ] Same-destination grouping
-- [ ] Common-origin grouping
-- [ ] Shared-segment detection
-- [ ] Time-window compatibility
-- [ ] Cargo compatibility
-- [ ] Weight/volume aggregation
-- [ ] Capacity reservation
-- [ ] Consolidation economics
-- [ ] Hub-and-spoke opportunities
-- [ ] Consolidation vs direct comparison
+**Status: 🟡 Deterministic foundation substantially implemented; validation and advanced portfolio semantics pending**
+
+## Implemented
+- [x] Concrete scheduled shared-segment identity
+- [x] Shared-segment detection across candidate paths
+- [x] Different destinations can share an upstream segment
+- [x] Shipment-group weight, volume and package aggregation
+- [x] Schedule-specific remaining capacity checks
+- [x] Existing domain cargo compatibility reused
+- [x] Structured consolidation rejection diagnostics
+- [x] Fixed/quoted and variable pricing economics
+- [x] Deterministic shipment subset and candidate-path enumeration
+- [x] Shipment time-window validation
+- [x] Shared/private leg allocation
+- [x] Shared downstream leg recognition
+- [x] Per-segment resource aggregation
+- [x] Shared/private cost attribution
+- [x] Deterministic capacity reservation across competing opportunities
+- [x] Exact scheduled-segment resource accounting
+- [x] Shipment double-reservation protection
+- [x] Atomic multi-segment reservation
+- [x] Structured reservation rejection diagnostics
+
+## Remaining
+- [ ] Execute consolidation tests in CI/runtime environment
+- [ ] Hub-and-spoke opportunity generation
+- [ ] Consolidation-vs-direct portfolio comparison
+- [ ] Generate all coexisting feasible consolidation combinations
 
 # M5 — Deterministic Optimization Engine
-**Status: ⬜ Not started**
-- [ ] Direct-service baseline
-- [ ] Cheapest feasible baseline
-- [ ] Fastest feasible baseline
-- [ ] Unconsolidated baseline
-- [ ] OR-Tools integration
-- [ ] Shipment assignment
-- [ ] Capacity constraints
-- [ ] Schedule constraints
-- [ ] Time windows
-- [ ] Transfer constraints
-- [ ] Consolidation decisions
-- [ ] Provider availability
-- [ ] Cost, time, reliability and carbon objectives
-- [ ] Multi-objective optimization
-- [ ] Pareto analysis
-- [ ] Objective and constraint reports
-- [ ] Utilization metrics
+**Status: 🟡 Implementation complete; validation pending**
+
+## Implemented
+- [x] OR-Tools CP-SAT integration
+- [x] Exactly-one candidate path assignment per shipment
+- [x] Shared scheduled weight/volume capacity constraints
+- [x] Schedule-specific capacity accounting
+- [x] Provider/service availability filtering
+- [x] Cost, time, reliability, emissions and transfer policy terms
+- [x] Consolidation opportunity objective bonuses
+- [x] Protection against double-counting overlapping consolidation savings
+- [x] Deterministic single-worker solver configuration
+- [x] Solver objective/constraint result metrics
+- [x] Automated optimizer tests
+
+## Remaining
+- [ ] Runtime/CI execution evidence
+- [ ] Formal baseline comparison reporting
+- [ ] Richer multi-segment consolidation portfolio generation from M4
+- [ ] Full optimality-gap/benchmark reporting
 
 # M6 — Google ADK Agent Layer
-**Status: ⬜ Not started**
-- [ ] Logistics Manager Agent
-- [ ] Shipment analysis tools
-- [ ] Transport discovery tools
-- [ ] Policy analysis tools
-- [ ] Optimization tool
-- [ ] Solution validation tool
-- [ ] Recommendation agent
-- [ ] Natural-language objective extraction
-- [ ] Structured tool calls
-- [ ] Infeasibility handling
-- [ ] Trade-off explanation
-- [ ] Agent regression suite
-- [ ] Grounding/hallucination tests
+**Status: 🟡 Implementation complete; validation pending**
 
-**Guardrail:** the agent may orchestrate optimization but cannot invent capacity, price, schedule, route feasibility or operational facts.
+## Implemented
+- [x] RouteMind Logistics Manager ADK agent
+- [x] Structured policy extraction tool
+- [x] Structured portfolio optimization tool
+- [x] Optimization result validation tool
+- [x] Deterministic result summarization
+- [x] Deterministic infeasibility/trade-off explanation
+- [x] Grounding instructions prohibiting invented logistics facts
+- [x] Synthetic-data disclosure requirement
+- [x] Google ADK dependency updated to current 2.x range
+- [x] Local ADK playground instructions
+- [x] ADK tool regression tests
+- [x] CI workflow for lint and full pytest execution
+
+## Remaining validation
+- [ ] Install ADK and execute local agent smoke test
+- [ ] Execute full pytest suite in CI
+- [ ] Execute ADK evaluation/regression dataset with model credentials
 
 # M7 — Dynamic Re-optimization
 **Status: ⬜ Not started**
-- [ ] New/urgent shipment events
-- [ ] Vehicle breakdown
-- [ ] Bus/train/flight disruption
-- [ ] Capacity reduction
-- [ ] Provider outage
-- [ ] Road closure
-- [ ] Price change
+- [ ] Disruption/event model
 - [ ] Impact analysis
 - [ ] Alternative discovery
 - [ ] Incremental optimization
-- [ ] Recovery-plan validation
+- [ ] Recovery validation
 - [ ] Decision audit trail
 
 # M8 — Predictive Logistics Intelligence
 **Status: ⬜ Not started**
-- [ ] ETA prediction
-- [ ] Delay prediction
-- [ ] Carrier reliability prediction
+- [ ] ETA/delay prediction
+- [ ] Reliability prediction
 - [ ] Demand/capacity forecasting
-- [ ] Price forecasting
-- [ ] Congestion prediction
-- [ ] Failure-risk prediction
-- [ ] Model monitoring
-- [ ] Feature/data lineage
+- [ ] Price/congestion/failure prediction
+- [ ] Model monitoring and data lineage
 
 # M9 — Production Platform
 **Status: ⬜ Not started**
 - [ ] FastAPI
 - [ ] PostgreSQL / SQLAlchemy / Alembic
 - [ ] Async processing
-- [ ] Authentication and RBAC
-- [ ] Tenant isolation
-- [ ] API keys and audit logging
-- [ ] Docker and CI/CD
-- [ ] Security/dependency scanning
-- [ ] Observability, metrics and tracing
+- [ ] Authentication/RBAC/tenant isolation
+- [ ] Docker/CI/CD
+- [ ] Observability
 - [ ] Google Cloud deployment
 
 # Benchmark & Research Track
 - [ ] City, regional, cross-border and intercontinental scenarios
-- [ ] Fleet-only scenario
-- [ ] No-owned-fleet scenario
+- [ ] Fleet-only and no-owned-fleet scenarios
 - [ ] Public-transport-heavy scenario
 - [ ] High-consolidation scenario
 - [ ] Tight-deadline scenario
 - [ ] Capacity-constrained scenario
 - [ ] Disruption scenario
-- [ ] Cost, time, on-time, utilization, transfers, consolidation, emissions and runtime metrics
+- [ ] Cost/time/on-time/utilization/transfer/consolidation/emissions/runtime metrics
 - [ ] Optimality-gap measurement
-
-# Portfolio Deliverables
-- [ ] Production-quality Python architecture
-- [ ] Operations-research formulation
-- [ ] Multimodal graph engine
-- [ ] Constraint optimization
-- [ ] Shipment consolidation
-- [ ] Scheduling
-- [ ] Google ADK agents
-- [ ] Agent/tool evaluation
-- [ ] ML forecasting
-- [ ] Dynamic re-optimization
-- [ ] REST API
-- [ ] Database architecture
-- [ ] CI/CD
-- [ ] Cloud deployment
-- [ ] Observability
-- [ ] Reproducible benchmark suite
-- [ ] Technical documentation
 
 # Change Log
 | Date | Change |
 |---|---|
-| 2026-08-26 | Repository foundation and comprehensive README established |
-| 2026-08-26 | Initial multimodal domain models added |
-| 2026-08-26 | Project progress tracker established |
-| 2026-08-26 | Domain feasibility validation added |
-| 2026-08-26 | Reproducible synthetic logistics scenario engine added |
-| 2026-08-26 | Scenario tests and documentation added |
-| 2026-08-26 | Time-dependent multimodal graph models and builder added |
-| 2026-08-27 | Time-dependent capacity/deadline-aware candidate path search added |
-| 2026-08-27 | Path discovery tests added and cycle protection corrected |
+| 2026-08-27 | Candidate path model, multimodal search, constraints, Pareto filtering and diagnostics established |
+| 2026-08-27 | Distance-aware pricing and optional emissions metrics added |
+| 2026-08-27 | Deterministic economics tests and benchmark harness updated |
+| 2026-08-27 | M4 consolidation domain models and scheduled shared-segment detection added |
+| 2026-08-27 | Consolidation feasibility, capacity aggregation, cargo checks and deterministic economics added |
+| 2026-08-27 | Deterministic shipment grouping and candidate-path enumeration added |
+| 2026-08-27 | Explicit consolidation time-window compatibility checks and tests added |
+| 2026-08-27 | Shared/private leg allocation and downstream cost attribution added |
+| 2026-08-27 | Deterministic capacity reservation across competing consolidation opportunities added |
+| 2026-08-27 | CP-SAT portfolio optimization with shared scheduled capacity and consolidation objective integration added |
+| 2026-08-27 | Google ADK Logistics Manager, structured tools, grounding rules and CI workflow added |

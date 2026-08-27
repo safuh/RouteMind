@@ -24,21 +24,18 @@ def transport_can_carry_shipment(
     available_weight_kg: float | None = None,
     available_volume_m3: float | None = None,
 ) -> bool:
-    """Check the basic weight and volume constraints of a transport option."""
-    weight_capacity = (
-        option.capacity.max_weight_kg
-        if available_weight_kg is None
-        else min(option.capacity.max_weight_kg, available_weight_kg)
-    )
+    """Check weight and volume constraints, including schedule-specific capacity."""
+    weight_capacity = option.capacity.max_weight_kg
+    if available_weight_kg is not None:
+        weight_capacity = min(weight_capacity, available_weight_kg)
     if shipment.weight_kg > weight_capacity:
         return False
 
-    if option.capacity.max_volume_m3 is not None:
-        volume_capacity = option.capacity.max_volume_m3
-        if available_volume_m3 is not None:
-            volume_capacity = min(volume_capacity, available_volume_m3)
-        if shipment.volume_m3 > volume_capacity:
-            return False
+    volume_capacity = option.capacity.max_volume_m3
+    if available_volume_m3 is not None:
+        volume_capacity = available_volume_m3 if volume_capacity is None else min(volume_capacity, available_volume_m3)
+    if volume_capacity is not None and shipment.volume_m3 > volume_capacity:
+        return False
 
     return option.available
 
