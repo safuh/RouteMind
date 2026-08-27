@@ -12,6 +12,7 @@ class ConsolidationRejectionReason(StrEnum):
     """Machine-readable reasons a consolidation group cannot use a shared segment."""
 
     NO_SHARED_SEGMENT = "no_shared_segment"
+    UNKNOWN_SHIPMENT = "unknown_shipment"
     UNKNOWN_TRANSPORT_SERVICE = "unknown_transport_service"
     CAPACITY_WEIGHT = "capacity_weight"
     CAPACITY_VOLUME = "capacity_volume"
