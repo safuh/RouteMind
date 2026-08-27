@@ -4,7 +4,7 @@
 
 **Current phase:** Milestone 3 — Candidate Path Discovery
 
-**Overall status:** ~45% — M3 candidate discovery is feature-complete except for benchmark/performance evidence and distance-aware economics.
+**Overall status:** ~46% — M3 candidate discovery is feature-complete except for runtime evidence and distance-aware economics.
 
 ## Status Legend
 - ⬜ Not started
@@ -48,12 +48,13 @@ A milestone is complete only when implementation, automated tests, representativ
 - [x] Bounded search expansion budget
 - [x] Structured rejection diagnostics
 - [x] Search counters and diagnostic aggregation
+- [x] Deterministic benchmark scenario harness
 - [x] Automated tests and path documentation
 
 ## Remaining
 - [ ] Distance-aware pricing and emissions metrics
 - [ ] Provider-specific transfer compatibility semantics
-- [ ] Benchmark against baseline search
+- [ ] Execute benchmark suite and capture runtime evidence
 - [ ] Search performance instrumentation/benchmark report
 
 ### M3 exit criteria
@@ -140,3 +141,4 @@ A milestone is complete only when implementation, automated tests, representativ
 |---|---|
 | 2026-08-27 | Optimization-grade CandidatePath model, Pareto filtering, bounded search, transfer/cargo/policy constraints and tests established |
 | 2026-08-27 | Structured path rejection diagnostics and auditable search counters added |
+| 2026-08-27 | Deterministic benchmark scenario harness added; M3 kept open pending execution evidence |
