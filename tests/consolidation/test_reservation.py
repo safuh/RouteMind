@@ -21,12 +21,9 @@ from routemind.domain.models import (
 
 def shipment(id_: str, origin: Location, destination: Location, weight: float) -> Shipment:
     return Shipment(
-        id=id_,
-        origin=origin,
-        destination=destination,
+        id=id_, origin=origin, destination=destination,
         packages=[Package(id=f"P-{id_}", weight_kg=weight, length_m=0.2, width_m=0.2, height_m=0.2)],
-        ready_at=datetime(2026, 8, 27, 7, tzinfo=UTC),
-        deadline=datetime(2026, 8, 27, 20, tzinfo=UTC),
+        ready_at=datetime(2026, 8, 27, 7, tzinfo=UTC), deadline=datetime(2026, 8, 27, 20, tzinfo=UTC),
     )
 
 
@@ -97,7 +94,7 @@ def test_competing_opportunities_cannot_double_reserve_shared_capacity():
     assert not results[1].accepted
     assert results[1].rejections[0].reason == "shipment_already_reserved"
     assert ledger.reserved_weight_kg(segment) == 60
-    assert ledger.reserved_volume_m3(segment) == 0.02
+    assert ledger.reserved_volume_m3(segment) == 0.016
 
 
 def test_distinct_opportunities_share_capacity_until_remaining_capacity_is_exhausted():
