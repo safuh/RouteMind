@@ -17,6 +17,7 @@ class RejectionReason(StrEnum):
     INVALID_SCHEDULE = "invalid_schedule"
     DEADLINE = "deadline"
     TRANSFER_TIME = "transfer_time"
+    MAX_TRANSFERS = "max_transfers"
     WEIGHT_CAPACITY = "weight_capacity"
     VOLUME_CAPACITY = "volume_capacity"
     RELIABILITY = "reliability"
