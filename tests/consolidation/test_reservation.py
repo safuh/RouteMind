@@ -30,18 +30,24 @@ def shipment(id_: str, origin: Location, destination: Location, weight: float) -
     )
 
 
-def service(origin: Location, destination: Location) -> tuple[TransportOption, SharedTransportSegment]:
+def service(
+    origin: Location,
+    destination: Location,
+    *,
+    option_id: str = "BUS-001",
+    available_weight_kg: float = 70,
+) -> tuple[TransportOption, SharedTransportSegment]:
     departure = datetime(2026, 8, 27, 8, tzinfo=UTC)
     arrival = departure + timedelta(hours=3)
     option = TransportOption(
-        id="BUS-001",
+        id=option_id,
         provider_id="P1",
         provider_name="Synthetic Bus",
         mode=TransportMode.BUS,
         origin=origin,
         destination=destination,
         capacity=TransportCapacity(max_weight_kg=100, max_volume_m3=10),
-        schedules=[TransportSchedule(departure_at=departure, arrival_at=arrival, available_weight_kg=70)],
+        schedules=[TransportSchedule(departure_at=departure, arrival_at=arrival, available_weight_kg=available_weight_kg)],
         price=TransportPrice(model="fixed", amount=Decimal("100"), currency="KES"),
         reliability=0.95,
     )
@@ -119,9 +125,8 @@ def test_failed_reservation_is_atomic_across_multiple_shared_segments():
     nbo = Location(id="nbo", name="Nairobi")
     nku = Location(id="nku", name="Nakuru")
     ksm = Location(id="ksm", name="Kisumu")
-    first_option, first_segment = service(nbo, nku)
-    second_option, second_segment = service(nku, ksm)
-    second_option.id = "BUS-002"
+    first_option, first_segment = service(nbo, nku, available_weight_kg=70)
+    second_option, second_segment = service(nku, ksm, option_id="BUS-002", available_weight_kg=70)
     shipments = {"A": shipment("A", nbo, ksm, 80)}
     opportunity_with_two_segments = ConsolidationOpportunity(
         shipment_ids=("A",),
