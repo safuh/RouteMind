@@ -4,7 +4,7 @@
 
 **Current phase:** Milestone 4 — Shipment Consolidation
 
-**Overall status:** ~57% — M3 implementation remains validation-pending; M4 now has deterministic shared-segment detection, consolidation feasibility, capacity aggregation, cargo checks, pricing economics, shipment-group/candidate-path enumeration, and explicit shipment time-window validation.
+**Overall status:** ~60% — M3 implementation remains validation-pending; M4 now has deterministic shared-segment detection, consolidation feasibility, capacity aggregation, cargo checks, pricing economics, shipment-group/candidate-path enumeration, explicit shipment time-window validation, and shared/private leg allocation.
 
 | Milestone | Area | Status |
 |---|---|---:|
@@ -61,7 +61,7 @@
 - [ ] Benchmark/performance evidence is executed and recorded.
 
 # M4 — Shipment Consolidation
-**Status: 🟡 Grouping/time-window brick implemented; validation pending**
+**Status: 🟡 Shared/private allocation brick implemented; validation pending**
 
 ## Implemented
 - [x] Concrete scheduled shared-segment identity
@@ -87,11 +87,16 @@
 - [x] Shipment readiness vs candidate departure validation
 - [x] Shipment deadline vs candidate arrival validation
 - [x] Preservation of pre-existing CandidatePath deadline feasibility
+- [x] Shared scheduled leg allocation
+- [x] Shipment-private downstream leg allocation
+- [x] Shared downstream leg recognition when the exact schedule is common
+- [x] Per-segment weight, volume and package aggregation
+- [x] Shared fixed/quoted cost charged once
+- [x] Variable-price cost retained per shipment
 
 ## Remaining
 - [ ] Execute consolidation tests in CI/runtime environment
 - [ ] Capacity reservation across competing consolidation opportunities
-- [ ] Transfer handling allocation for shared/unshared downstream legs
 - [ ] Hub-and-spoke opportunity generation
 - [ ] Consolidation-vs-direct portfolio comparison
 - [ ] Feed feasible consolidation combinations into M5 optimization
@@ -165,3 +170,4 @@
 | 2026-08-27 | Core M4 consolidation scenarios documented and covered by automated tests |
 | 2026-08-27 | Deterministic shipment grouping and candidate-path enumeration added |
 | 2026-08-27 | Explicit consolidation time-window compatibility checks and tests added |
+| 2026-08-27 | Shared/private leg allocation and downstream cost attribution added |
