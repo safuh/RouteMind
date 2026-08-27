@@ -132,7 +132,7 @@ class PathSearchEngine:
                     seen.add(key)
 
                     utilization = self._capacity_utilization(shipment, option, schedule)
-                    waiting = (schedule.departure_at - state.ready_at).total_seconds()
+                    waiting = (schedule.departure_at - shipment.ready_at).total_seconds()
                     leg_cost = self._price_for_shipment(option, shipment)
                     cost = state.cost + leg_cost + (self._config.transfer_handling_cost if state.legs else Decimal("0"))
                     emissions = state.emissions_kg_co2e + self._emissions_for(option, shipment)
@@ -187,7 +187,7 @@ class PathSearchEngine:
             return RejectionReason.MISSED_DEPARTURE, "Shipment is not ready before the scheduled departure"
         if shipment.deadline and schedule.arrival_at > shipment.deadline:
             return RejectionReason.DEADLINE, "Scheduled arrival exceeds shipment deadline"
-        if state.legs and schedule.departure_at < state.legs[-1].arrival_at + timedelta(seconds=self._config.min_transfer_seconds):
+        if state.legs and schedule.departure_at <= state.legs[-1].arrival_at + timedelta(seconds=self._config.min_transfer_seconds):
             return RejectionReason.TRANSFER_TIME, "Transfer does not provide the configured handling time"
         return None
 
