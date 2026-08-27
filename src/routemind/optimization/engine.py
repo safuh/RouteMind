@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from decimal import Decimal
-from typing import Iterable
 
 from ortools.sat.python import cp_model
 
 from routemind.consolidation.models import ConsolidationOpportunity, SharedTransportSegment
-from routemind.domain.models import OptimizationPolicy, OptimizationResult, TransportLeg, TransportOption, TransportPlan
+from routemind.domain.models import (
+    OptimizationPolicy,
+    OptimizationResult,
+    TransportLeg,
+    TransportOption,
+    TransportPlan,
+)
 from routemind.paths.models import CandidatePath
 
 _SCALE = 1000
@@ -39,7 +45,8 @@ def optimize_portfolio(
     policy = policy or OptimizationPolicy()
     raw_paths = tuple(path for path in candidate_paths if path.deadline_feasible)
     unavailable_paths = tuple(
-        path for path in raw_paths
+        path
+        for path in raw_paths
         if any(
             leg.option_id not in transport_options or not transport_options[leg.option_id].available
             for leg in path.legs
@@ -54,19 +61,23 @@ def optimize_portfolio(
     if not by_shipment or any(not indices for indices in by_shipment.values()):
         warnings = ["No available, deadline-feasible candidate path exists for at least one shipment."]
         if unavailable_paths:
-            warnings.append(f"Excluded {len(unavailable_paths)} candidate path(s) using unavailable or unknown services.")
+            warnings.append(
+                f"Excluded {len(unavailable_paths)} candidate path(s) using unavailable or unknown services."
+            )
         return OptimizationResult(plans=[], objective_value=0.0, feasible=False, warnings=warnings)
 
     currencies = {path.currency for path in paths}
     if len(currencies) != 1:
         return OptimizationResult(
-            plans=[], objective_value=0.0, feasible=False,
+            plans=[],
+            objective_value=0.0,
+            feasible=False,
             warnings=["Candidate paths contain multiple currencies; normalize currency before optimization."],
         )
 
     model = cp_model.CpModel()
     selected = [model.new_bool_var(f"path_{index}") for index in range(len(paths))]
-    for shipment_id, indices in sorted(by_shipment.items()):
+    for _shipment_id, indices in sorted(by_shipment.items()):
         model.add_exactly_one(selected[index] for index in indices)
 
     segment_paths: dict[tuple[str, str, object, object], list[tuple[int, float, float]]] = defaultdict(list)
@@ -79,21 +90,33 @@ def optimize_portfolio(
             if option is None:
                 continue
             schedule = next(
-                (s for s in option.schedules if s.departure_at == leg.departure_at and s.arrival_at == leg.arrival_at),
+                (
+                    s
+                    for s in option.schedules
+                    if s.departure_at == leg.departure_at and s.arrival_at == leg.arrival_at
+                ),
                 None,
             )
             if schedule is not None:
                 segment_caps[identity] = (
-                    schedule.available_weight_kg if schedule.available_weight_kg is not None else option.capacity.max_weight_kg,
-                    schedule.available_volume_m3 if schedule.available_volume_m3 is not None else option.capacity.max_volume_m3,
+                    schedule.available_weight_kg
+                    if schedule.available_weight_kg is not None
+                    else option.capacity.max_weight_kg,
+                    schedule.available_volume_m3
+                    if schedule.available_volume_m3 is not None
+                    else option.capacity.max_volume_m3,
                 )
 
     for identity, entries in segment_paths.items():
         weight_cap, volume_cap = segment_caps.get(identity, (None, None))
         if weight_cap is not None:
-            model.add(sum(_int(weight) * selected[index] for index, weight, _ in entries) <= _int(weight_cap))
+            model.add(
+                sum(_int(weight) * selected[index] for index, weight, _ in entries) <= _int(weight_cap)
+            )
         if volume_cap is not None:
-            model.add(sum(_int(volume) * selected[index] for index, _, volume in entries) <= _int(volume_cap))
+            model.add(
+                sum(_int(volume) * selected[index] for index, _, volume in entries) <= _int(volume_cap)
+            )
 
     objective_terms = []
     for index, path in enumerate(paths):
@@ -144,7 +167,9 @@ def optimize_portfolio(
     status = solver.solve(model)
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         return OptimizationResult(
-            plans=[], objective_value=0.0, feasible=False,
+            plans=[],
+            objective_value=0.0,
+            feasible=False,
             warnings=[f"CP-SAT returned {solver.status_name(status)}."],
         )
 
@@ -179,7 +204,9 @@ def optimize_portfolio(
         plans=plans,
         objective_value=solver.objective_value / _SCALE,
         feasible=True,
-        warnings=[f"Excluded {len(unavailable_paths)} unavailable/unknown-service path(s)."] if unavailable_paths else [],
+        warnings=[
+            f"Excluded {len(unavailable_paths)} unavailable/unknown-service path(s)."
+        ] if unavailable_paths else [],
         metrics={
             "shipment_count": float(len(plans)),
             "total_cost": float(total_cost),
