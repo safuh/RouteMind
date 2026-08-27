@@ -1,5 +1,6 @@
 """Deterministic shipment consolidation primitives."""
 
+from .allocation import ConsolidationAllocation, SegmentAllocation, allocate_consolidation
 from .engine import detect_shared_segments, evaluate_consolidation
 from .grouping import (
     candidate_paths_by_shipment,
@@ -16,10 +17,13 @@ from .models import (
 from .time_windows import check_group_time_windows, check_path_time_window
 
 __all__ = [
+    "ConsolidationAllocation",
     "ConsolidationOpportunity",
     "ConsolidationRejection",
     "ConsolidationRejectionReason",
+    "SegmentAllocation",
     "SharedTransportSegment",
+    "allocate_consolidation",
     "candidate_paths_by_shipment",
     "check_group_time_windows",
     "check_path_time_window",
