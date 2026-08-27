@@ -135,7 +135,7 @@
 - [ ] Decision audit trail
 
 # M8 — Predictive Logistics Intelligence
-**Status: ⬜ Not started
+**Status: ⬜ Not started**
 - [ ] ETA/delay prediction
 - [ ] Reliability prediction
 - [ ] Demand/capacity forecasting
