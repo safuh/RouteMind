@@ -4,7 +4,7 @@
 
 **Current phase:** Milestone 4 — Shipment Consolidation
 
-**Overall status:** ~60% — M3 implementation remains validation-pending; M4 now has deterministic shared-segment detection, consolidation feasibility, capacity aggregation, cargo checks, pricing economics, shipment-group/candidate-path enumeration, explicit shipment time-window validation, and shared/private leg allocation.
+**Overall status:** ~63% — M3 implementation remains validation-pending; M4 now has deterministic shared-segment detection, consolidation feasibility, capacity aggregation, cargo checks, pricing economics, shipment-group/candidate-path enumeration, explicit shipment time-window validation, shared/private leg allocation, and competing-opportunity capacity reservation.
 
 | Milestone | Area | Status |
 |---|---|---:|
@@ -61,7 +61,7 @@
 - [ ] Benchmark/performance evidence is executed and recorded.
 
 # M4 — Shipment Consolidation
-**Status: 🟡 Shared/private allocation brick implemented; validation pending**
+**Status: 🟡 Capacity reservation brick implemented; validation pending**
 
 ## Implemented
 - [x] Concrete scheduled shared-segment identity
@@ -93,10 +93,14 @@
 - [x] Per-segment weight, volume and package aggregation
 - [x] Shared fixed/quoted cost charged once
 - [x] Variable-price cost retained per shipment
+- [x] Deterministic capacity reservation across competing opportunities
+- [x] Exact scheduled-segment resource accounting
+- [x] Shipment double-reservation protection
+- [x] Atomic multi-segment reservation
+- [x] Structured reservation rejection diagnostics
 
 ## Remaining
 - [ ] Execute consolidation tests in CI/runtime environment
-- [ ] Capacity reservation across competing consolidation opportunities
 - [ ] Hub-and-spoke opportunity generation
 - [ ] Consolidation-vs-direct portfolio comparison
 - [ ] Feed feasible consolidation combinations into M5 optimization
@@ -131,7 +135,7 @@
 - [ ] Decision audit trail
 
 # M8 — Predictive Logistics Intelligence
-**Status: ⬜ Not started**
+**Status: ⬜ Not started
 - [ ] ETA/delay prediction
 - [ ] Reliability prediction
 - [ ] Demand/capacity forecasting
@@ -171,3 +175,4 @@
 | 2026-08-27 | Deterministic shipment grouping and candidate-path enumeration added |
 | 2026-08-27 | Explicit consolidation time-window compatibility checks and tests added |
 | 2026-08-27 | Shared/private leg allocation and downstream cost attribution added |
+| 2026-08-27 | Deterministic capacity reservation across competing consolidation opportunities added |
