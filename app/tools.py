@@ -7,7 +7,12 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from routemind.domain.models import OptimizationPolicy, OptimizationResult, Shipment, TransportOption
+from routemind.domain.models import (
+    OptimizationPolicy,
+    OptimizationResult,
+    Shipment,
+    TransportOption,
+)
 from routemind.optimization import optimize_portfolio
 from routemind.paths import PathSearchEngine
 from routemind.paths.models import CandidatePath
@@ -36,12 +41,14 @@ def extract_optimization_policy(request: str) -> dict[str, Any]:
 def _validation_error(message: str, exc: ValidationError) -> str:
     """Return compact, actionable tool diagnostics instead of a Pydantic traceback."""
     fields = [".".join(str(part) for part in error["loc"]) for error in exc.errors()[:10]]
-    return json.dumps({
-        "errorCode": "ValidationError",
-        "errorMessage": message,
-        "invalidFields": fields,
-        "action": "Provide complete domain objects; do not use path summaries or null transport-leg fields.",
-    })
+    return json.dumps(
+        {
+            "errorCode": "ValidationError",
+            "errorMessage": message,
+            "invalidFields": fields,
+            "action": "Provide complete domain objects; do not use path summaries or null transport-leg fields.",
+        }
+    )
 
 
 def optimize_portfolio_json(
@@ -124,11 +131,15 @@ def discover_and_optimize_portfolio(
         }
 
     if not paths:
-        return json.dumps({
-            "feasible": False,
-            "warnings": ["No feasible candidate paths were discovered for the supplied shipment portfolio."],
-            "search_diagnostics": diagnostics,
-        })
+        return json.dumps(
+            {
+                "feasible": False,
+                "warnings": [
+                    "No feasible candidate paths were discovered for the supplied shipment portfolio."
+                ],
+                "search_diagnostics": diagnostics,
+            }
+        )
 
     result = optimize_portfolio(paths, {option.id: option for option in options}, policy, opportunities)
     payload = json.loads(result.model_dump_json())
@@ -161,13 +172,15 @@ def validate_optimization_result(candidate_paths_json: str, result_json: str) ->
 def summarize_result(result_json: str) -> str:
     """Produce a concise factual summary from a deterministic optimization result."""
     result = OptimizationResult.model_validate_json(result_json)
-    return json.dumps({
-        "feasible": result.feasible,
-        "objective_value": result.objective_value,
-        "warnings": result.warnings,
-        "metrics": result.metrics,
-        "shipments": [plan.shipment_id for plan in result.plans],
-    })
+    return json.dumps(
+        {
+            "feasible": result.feasible,
+            "objective_value": result.objective_value,
+            "warnings": result.warnings,
+            "metrics": result.metrics,
+            "shipments": [plan.shipment_id for plan in result.plans],
+        }
+    )
 
 
 def explain_optimization_result(result_json: str) -> str:
