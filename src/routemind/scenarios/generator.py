@@ -9,8 +9,8 @@ from decimal import Decimal
 from routemind.domain.models import (
     Location,
     Package,
-    Shipment,
     PricingModel,
+    Shipment,
     TransportCapacity,
     TransportMode,
     TransportOption,
