@@ -5,7 +5,10 @@ from routemind.consolidation.grouping import (
     generate_coexisting_opportunity_combinations,
     generate_consolidation_opportunities,
 )
-from routemind.consolidation.models import ConsolidationOpportunity, SharedTransportSegment
+from routemind.consolidation.models import (
+    ConsolidationOpportunity,
+    SharedTransportSegment,
+)
 from routemind.domain.models import (
     Location,
     Package,
