@@ -2,9 +2,9 @@
 
 > Living engineering tracker. Do not mark a component complete until implementation, automated tests, documentation, and validation evidence exist.
 
-**Current phase:** Milestone 6 — Google ADK Agent Layer
+**Current phase:** Milestone 4 — Shipment Consolidation
 
-**Overall status:** ~76% — M3/M4/M5/M6 core implementation is now on `main`. Automated CI validation passes for the merged M5/M6 branch; remaining work is primarily benchmark evidence, richer consolidation portfolio generation, model-backed ADK evaluation, and later milestones.
+**Overall status:** ~78% — M3/M4/M5/M6 core implementation is on `main`; PR #7 contains an ADK surface fix awaiting CI completion. M4 now also has deterministic hub-and-spoke opportunity discovery. Remaining work is benchmark evidence, richer consolidation portfolio generation, model-backed ADK evaluation, and later milestones.
 
 | Milestone | Area | Status |
 |---|---|---:|
@@ -14,18 +14,18 @@
 | M3 | Candidate path discovery | 🟡 |
 | M4 | Shipment consolidation | 🟡 |
 | M5 | Deterministic optimization | 🟢 Core implementation + automated validation |
-| M6 | Google ADK agent layer | 🟢 Core implementation + automated validation |
+| M6 | Google ADK agent layer | 🟢 Core implementation + automated validation; PR #7 pending |
 | M7 | Dynamic re-optimization | ⬜ |
 | M8 | Predictive logistics intelligence | ⬜ |
 | M9 | Production platform | ⬜ |
 
 # M3 — Candidate Path Discovery
-**Status: 🟡 Implementation complete; runtime regression suite now passing, benchmark evidence pending**
+**Status: 🟡 Implementation complete; runtime regression suite passing, benchmark evidence pending**
 
 ## Validation evidence
 - [x] Full pytest suite executes successfully in GitHub Actions
 - [x] Path-search regressions fixed for emissions state initialization
-- [x] Waiting-time semantics validated by existing path-search tests
+- [x] Waiting-time semantics validated
 - [x] Minimum-transfer and maximum-transfer diagnostics validated
 
 ## Remaining
@@ -57,11 +57,15 @@
 - [x] Atomic multi-segment reservation
 - [x] Structured reservation rejection diagnostics
 - [x] Consolidation regression suite passing in CI
+- [x] Deterministic hub-and-spoke group discovery
+- [x] Exact scheduled-prefix validation before hub-and-spoke classification
+- [x] Hub-and-spoke regression tests
 
 ## Remaining
-- [ ] Hub-and-spoke opportunity generation
+- [ ] Validate hub-and-spoke tests in CI
 - [ ] Consolidation-vs-direct portfolio comparison
 - [ ] Generate all coexisting feasible consolidation combinations
+- [ ] Feed richer consolidation combinations into M5 optimization
 
 # M5 — Deterministic Optimization Engine
 **Status: 🟢 Core implementation and automated validation complete**
@@ -102,7 +106,8 @@
 - [x] ADK tool regression tests
 - [x] CI workflow for lint and full pytest execution
 - [x] ADK agent import smoke test in CI
-- [x] Full pytest suite passing in CI
+- [x] Full pytest suite passing in CI on the merged M5/M6 baseline
+- [ ] Merge PR #7 after its corrected CI run passes
 
 ## Remaining
 - [ ] Execute model-backed ADK evaluation/regression dataset with configured credentials
@@ -161,3 +166,5 @@
 | 2026-08-27 | CP-SAT portfolio optimization with shared scheduled capacity and consolidation objective integration added |
 | 2026-08-27 | Google ADK Logistics Manager, structured tools, grounding rules and CI workflow added |
 | 2026-08-27 | Full 72-test CI suite and ADK import smoke test passed; M5/M6 merged to main |
+| 2026-08-28 | PR #7 corrected ADK regression test to inspect wrapped tool names rather than function __name__ |
+| 2026-08-28 | Deterministic hub-and-spoke opportunity discovery and regression tests added |
