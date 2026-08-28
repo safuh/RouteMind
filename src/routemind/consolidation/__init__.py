@@ -4,7 +4,9 @@ from .allocation import ConsolidationAllocation, SegmentAllocation, allocate_con
 from .engine import detect_shared_segments, evaluate_consolidation
 from .grouping import (
     candidate_paths_by_shipment,
+    generate_coexisting_opportunity_combinations,
     generate_consolidation_groups,
+    generate_consolidation_opportunities,
     generate_shipment_groups,
     reject_unknown_shipments,
 )
@@ -40,7 +42,9 @@ __all__ = [
     "check_path_time_window",
     "detect_shared_segments",
     "evaluate_consolidation",
+    "generate_coexisting_opportunity_combinations",
     "generate_consolidation_groups",
+    "generate_consolidation_opportunities",
     "generate_shipment_groups",
     "reject_unknown_shipments",
     "reserve_opportunities",
