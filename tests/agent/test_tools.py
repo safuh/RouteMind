@@ -3,6 +3,7 @@ import json
 from app.tools import (
     explain_optimization_result,
     extract_optimization_policy,
+    optimize_portfolio_json,
     summarize_result,
     validate_optimization_result,
 )
@@ -51,7 +52,7 @@ def test_result_validation_rejects_unknown_plan_path():
     result = {
         "plans": [{
             "shipment_id": "A", "legs": [{
-                "option_id": "BUS-UNKNOWN", "origin": {"id": "nbo", "name": "Nairobi"},
+                "option_id": "BUS-UNKNOWN", "origin": {"id": "nbo", "name": "Nakuru"},
                 "destination": {"id": "nku", "name": "Nakuru"},
                 "departure_at": "2026-08-27T08:00:00Z", "arrival_at": "2026-08-27T11:00:00Z",
                 "allocated_weight_kg": 10, "allocated_volume_m3": .008,
@@ -63,3 +64,15 @@ def test_result_validation_rejects_unknown_plan_path():
     validation = json.loads(validate_optimization_result(json.dumps([path]), json.dumps(result)))
     assert validation["valid"] is False
     assert validation["errors"]
+
+
+def test_optimize_portfolio_json_returns_actionable_validation_error_for_summary_path():
+    path = {
+        "path_id": "path_courier_direct",
+        "shipment_id": "SHIP-1",
+        "legs": [{"leg_id": "leg_courier", "option_id": "COURIER-1", "origin": None, "destination": None}],
+    }
+    response = json.loads(optimize_portfolio_json(json.dumps([path]), "[]"))
+    assert response["errorCode"] == "ValidationError"
+    assert "complete" in response["errorMessage"]
+    assert response["invalidFields"]
