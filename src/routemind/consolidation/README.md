@@ -37,6 +37,23 @@ The engine compares the cost of charging each shipment independently on the shar
 
 No assumption is made that consolidation is economically beneficial. M5 can later choose between feasible opportunities using business policy.
 
+## Candidate opportunity generation
+
+`generate_consolidation_opportunities()` expands the deterministic shipment subsets and all candidate-path combinations for those subsets before evaluating feasibility. This is important because the first discovered path for a shipment is not necessarily the path that can participate in a shared scheduled service.
+
+Only opportunities that are actually feasible are returned. Their original deterministic ordering is preserved.
+
+## Coexisting opportunity portfolios
+
+`generate_coexisting_opportunity_combinations()` enumerates feasible combinations of the generated opportunities. It uses the same capacity reservation contract as the standalone reservation layer, so a combination is accepted only when:
+
+- no shipment is reserved by two consolidation opportunities;
+- every exact scheduled segment remains within weight capacity;
+- every exact scheduled segment remains within volume capacity when modeled; and
+- all reservations in the combination can be committed atomically in deterministic order.
+
+The empty combination is included as the no-consolidation baseline. An opportunity can therefore be individually feasible while a larger combination is rejected because the opportunities compete for the same scheduled capacity.
+
 ## Capacity reservation
 
 `CapacityReservationLedger` is the deterministic bridge between individual consolidation opportunities and a future portfolio optimizer.
@@ -45,8 +62,8 @@ An accepted opportunity reserves capacity against the **exact scheduled segment 
 
 The ledger also prevents a shipment from being reserved by more than one accepted opportunity in the same portfolio plan. Reservation is atomic across all segments in an opportunity: if any segment is infeasible, no segment is committed.
 
-The ledger is intentionally deterministic and optimizer-independent. `reserve_opportunities()` applies opportunities in supplied order and reports an explicit result for each attempt; M5 can later use the same resource model while making the global selection decision.
+The ledger is intentionally deterministic and optimizer-independent. `reserve_opportunities()` applies opportunities in supplied order and reports an explicit result for each attempt; M5 can use the same resource model while making the global selection decision.
 
 ## Scope
 
-This module does not yet solve portfolio optimization, enumerate all hub-and-spoke structures, or choose the globally best set of opportunities. It provides a reliable deterministic resource-consumption contract for those subsequent layers.
+The remaining M4 work is to generate new hub-and-spoke structures when they are not already represented by discovered candidate paths, then connect those generated opportunities to the M5 portfolio optimizer and benchmark their value against unconsolidated/direct baselines.
