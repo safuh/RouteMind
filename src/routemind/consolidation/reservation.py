@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from routemind.domain.models import Shipment, TransportOption
 
@@ -42,14 +42,7 @@ class CapacityReservationResult:
 
 
 class CapacityReservationLedger:
-    """In-memory deterministic ledger for competing consolidation opportunities.
-
-    The ledger is deliberately independent of the optimizer. Each accepted
-    opportunity consumes capacity on every concrete scheduled segment it shares.
-    A shipment may belong to at most one accepted consolidation opportunity,
-    preventing a shipment's weight/volume from being counted twice on the same
-    portfolio plan.
-    """
+    """In-memory deterministic ledger for competing consolidation opportunities."""
 
     def __init__(self) -> None:
         self._reservations: list[CapacityReservation] = []
@@ -86,11 +79,7 @@ class CapacityReservationLedger:
         shipments: dict[str, Shipment],
         transport_options: dict[str, TransportOption],
     ) -> CapacityReservationResult:
-        """Atomically reserve an opportunity if all shared resources remain feasible.
-
-        Validation is performed for every shared segment before mutating the
-        ledger. A rejected opportunity therefore consumes no capacity.
-        """
+        """Atomically reserve an opportunity if all shared resources remain feasible."""
         shipment_ids = tuple(opportunity.shipment_ids)
         duplicate_shipments = tuple(sorted(set(shipment_ids) & self._reserved_shipments))
         if duplicate_shipments:
