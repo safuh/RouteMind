@@ -9,8 +9,8 @@ from decimal import Decimal
 from routemind.domain.models import (
     Location,
     Package,
-    Shipment,
     PricingModel,
+    Shipment,
     TransportCapacity,
     TransportMode,
     TransportOption,
@@ -114,7 +114,6 @@ def _transport_options(
             )
         )
 
-    # Final-mile motorcycle capacity makes the model genuinely multimodal.
     for index, destination in enumerate(["ksm", "eld", "kak"]):
         departure = now + timedelta(hours=2 + index)
         options.append(
