@@ -60,7 +60,7 @@ class CandidatePath(BaseModel):
 
     @model_validator(mode="after")
     def validate_leg_continuity(self) -> CandidatePath:
-        for previous, current in zip(self.legs, self.legs[1:]):
+        for previous, current in zip(self.legs, self.legs[1:], strict=True):
             if previous.destination.id != current.origin.id:
                 raise ValueError("Candidate path legs must form a continuous journey")
             if current.departure_at < previous.arrival_at:
