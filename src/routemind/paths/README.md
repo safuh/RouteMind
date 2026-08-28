@@ -1,6 +1,6 @@
-# Candidate Path Discovery
+# Candidate Path Discovery & Consolidation
 
-The `paths` package generates feasible shipment-level transportation strategies. It is deliberately deterministic and independent of Google ADK and the future OR-Tools optimizer.
+The `paths` package generates feasible shipment-level transportation strategies and identifies deterministic opportunities for multiple strategies to share concrete scheduled transport capacity. It is independent of Google ADK and the future OR-Tools optimizer.
 
 ## CandidatePath
 
@@ -21,6 +21,21 @@ The `paths` package generates feasible shipment-level transportation strategies.
 
 The object does **not** choose a preferred route.
 
+## Tool/API contract
+
+`CandidatePathContract` is a read-only serialization DTO for ADK/API consumers. Consumers should use `serialize_candidate_paths()` on validated domain candidates instead of constructing `CandidatePath` from LLM-generated dictionaries.
+
+A complete leg requires:
+
+- `option_id`
+- origin and destination `Location`
+- concrete departure timestamp
+- concrete arrival timestamp
+- allocated weight
+- allocated volume
+
+This boundary prevents legacy/partial payloads such as `path_id`/`leg_id` with null locations from entering the deterministic domain model.
+
 ## Search semantics
 
 `PathSearchEngine` considers scheduled services only when they are feasible for the shipment and configured policy:
@@ -36,25 +51,34 @@ The object does **not** choose a preferred route.
 - transfer handling cost
 - cycle/reuse protection
 - reliability threshold
-
-Pricing currently evaluates `fixed`, `quoted`, `per_kg`, and `per_volume`. A `per_km` or `per_kg_km` price is rejected until distance is a first-class service/graph attribute. The engine intentionally does not reinterpret a distance rate as a total price.
+- distance-aware pricing and optional emissions
 
 ## Pareto filtering
 
 After candidate generation, `remove_dominated_paths()` removes a path only when another path is no worse on cost, transit time, waiting time, transfer count and reliability, and strictly better on at least one. When both paths contain emissions estimates, emissions are also considered.
 
-This preserves genuine trade-offs. For example, a cheaper/slower path and a faster/more-expensive path both survive for the later business-policy optimizer.
-
 Capacity utilization is not part of dominance because preserving spare capacity can be strategically valuable when optimizing a shipment portfolio.
 
-## Deliberate future extensions
+## Shipment consolidation foundation
 
-The current contract leaves explicit extension points for:
+`ConsolidationEngine` detects shared **scheduled transport instances**, not merely matching geographic routes. A `SharedSegment` is keyed by:
 
-- distance-aware pricing and emissions
-- transfer compatibility matrices
-- provider-specific transfer rules
-- richer cargo restrictions
-- path rejection diagnostics
-- benchmark instrumentation
-- portfolio-level shared-segment consolidation
+- transport option
+- origin
+- destination
+- scheduled departure
+- scheduled arrival
+
+This distinction prevents two different buses/services on the same route from being treated as the same capacity.
+
+`ConsolidationEngine.evaluate()` then checks aggregate:
+
+- weight
+- volume
+- cargo restrictions
+- deadline feasibility
+- service availability
+
+and evaluates segment economics under the supported pricing models. Fixed/quoted services can create direct consolidation savings; usage-based pricing may produce zero savings because aggregate usage remains additive.
+
+The engine identifies opportunities but does **not** choose which portfolio combination to use. That decision belongs to the future optimization layer.
