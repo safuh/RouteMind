@@ -9,13 +9,14 @@ from routemind.consolidation.models import ConsolidationOpportunity, SharedTrans
 from routemind.domain.models import (
     Location,
     Package,
+    PricingModel,
     Shipment,
     TransportCapacity,
+    TransportLeg,
     TransportMode,
     TransportOption,
     TransportPrice,
     TransportSchedule,
-    PricingModel,
 )
 from routemind.paths.models import CandidatePath
 
@@ -23,7 +24,6 @@ from routemind.paths.models import CandidatePath
 NOW = datetime(2026, 8, 28, 8, tzinfo=UTC)
 NBO = Location(id="NBO", name="Nairobi")
 KIS = Location(id="KIS", name="Kisumu")
-ELD = Location(id="ELD", name="Eldoret")
 
 
 def shipment(id_: str, destination: Location = KIS, weight: float = 2) -> Shipment:
@@ -63,9 +63,18 @@ def option(id_: str, destination: Location, capacity: float = 20) -> TransportOp
 
 def candidate(shipment_id: str, option_id: str, destination: Location) -> CandidatePath:
     departure = NOW + timedelta(hours=1)
+    leg = TransportLeg(
+        option_id=option_id,
+        origin=NBO,
+        destination=destination,
+        departure_at=departure,
+        arrival_at=departure + timedelta(hours=3),
+        allocated_weight_kg=2,
+        allocated_volume_m3=0.008,
+    )
     return CandidatePath(
         shipment_id=shipment_id,
-        legs=(),
+        legs=(leg,),
         total_cost=Decimal("100"),
         currency="KES",
         transit_seconds=10800,
@@ -76,20 +85,6 @@ def candidate(shipment_id: str, option_id: str, destination: Location) -> Candid
         providers=("Synthetic Carrier",),
         capacity_utilization=0.1,
         deadline_feasible=True,
-    ).model_copy(
-        update={
-            "legs": (
-                {
-                    "option_id": option_id,
-                    "origin": NBO,
-                    "destination": destination,
-                    "departure_at": departure,
-                    "arrival_at": departure + timedelta(hours=3),
-                    "allocated_weight_kg": 2,
-                    "allocated_volume_m3": 0.008,
-                },
-            )
-        }
     )
 
 
