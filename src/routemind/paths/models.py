@@ -1,54 +1,34 @@
-"""Path-level domain objects and metrics for candidate transportation strategies."""
+"""Candidate path models and Pareto-dominance helpers."""
 
 from __future__ import annotations
 
-from datetime import datetime
+from collections.abc import Sequence
 from decimal import Decimal
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from routemind.domain.models import TransportLeg, TransportMode
 
 
-class PathStatus(StrEnum):
-    FEASIBLE = "feasible"
-
-
 class CandidatePath(BaseModel):
-    """A complete feasible strategy for moving one shipment.
-
-    CandidatePath deliberately contains decision metrics but does not select a
-    winner. The optimization layer can compare these alternatives later using
-    a configurable business objective.
-    """
+    """A feasible ordered sequence of transport legs for one shipment."""
 
     model_config = ConfigDict(frozen=True)
 
     shipment_id: str
-    legs: tuple[TransportLeg, ...] = Field(min_length=1)
-    total_cost: Decimal = Field(ge=0)
-    currency: str = Field(min_length=3, max_length=3)
+    legs: tuple[TransportLeg, ...]
+    total_cost: Decimal = Field(ge=Decimal("0"))
+    currency: str
     transit_seconds: float = Field(ge=0)
     waiting_seconds: float = Field(ge=0)
     number_of_transfers: int = Field(ge=0)
     reliability: float = Field(ge=0, le=1)
-    modes: tuple[TransportMode, ...] = Field(min_length=1)
-    providers: tuple[str, ...] = Field(min_length=1)
-    capacity_utilization: float = Field(ge=0, le=1)
+    modes: tuple[TransportMode, ...]
+    providers: tuple[str, ...]
+    capacity_utilization: float = Field(ge=0)
     deadline_feasible: bool
     emissions_kg_co2e: float | None = Field(default=None, ge=0)
-    status: PathStatus = PathStatus.FEASIBLE
-    reason: str | None = None
-    metadata: dict[str, str] = Field(default_factory=dict)
-
-    @property
-    def departure_at(self) -> datetime:
-        return self.legs[0].departure_at
-
-    @property
-    def arrival_at(self) -> datetime:
-        return self.legs[-1].arrival_at
+    metadata: dict[str, object] = Field(default_factory=dict)
 
     @property
     def elapsed_seconds(self) -> float:
@@ -60,7 +40,7 @@ class CandidatePath(BaseModel):
 
     @model_validator(mode="after")
     def validate_leg_continuity(self) -> CandidatePath:
-        for previous, current in zip(self.legs, self.legs[1:]):
+        for previous, current in zip(self.legs, self.legs[1:], strict=True):
             if previous.destination.id != current.origin.id:
                 raise ValueError("Candidate path legs must form a continuous journey")
             if current.departure_at < previous.arrival_at:
@@ -70,33 +50,39 @@ class CandidatePath(BaseModel):
         return self
 
     def dominates(self, other: CandidatePath) -> bool:
-        """Return whether this path Pareto-dominates another path.
-
-        Lower cost/time/transfers/emissions and higher reliability are better.
-        Emissions are compared only when both candidates have an estimate.
-        Capacity utilization is intentionally excluded: preserving spare
-        capacity can be valuable to a portfolio optimizer and is policy-driven.
-        """
-        if self.currency != other.currency:
-            return False
-
-        no_worse = (
+        """Return whether this path is no worse on all optimization dimensions."""
+        return (
             self.total_cost <= other.total_cost
-            and self.transit_seconds <= other.transit_seconds
-            and self.waiting_seconds <= other.waiting_seconds
-            and self.number_of_transfers <= other.number_of_transfers
+            and self.elapsed_seconds <= other.elapsed_seconds
             and self.reliability >= other.reliability
-        )
-        strictly_better = (
-            self.total_cost < other.total_cost
-            or self.transit_seconds < other.transit_seconds
-            or self.waiting_seconds < other.waiting_seconds
-            or self.number_of_transfers < other.number_of_transfers
-            or self.reliability > other.reliability
+            and self.capacity_utilization <= other.capacity_utilization
+            and (
+                self.emissions_kg_co2e is None
+                or other.emissions_kg_co2e is None
+                or self.emissions_kg_co2e <= other.emissions_kg_co2e
+            )
+            and (
+                self.total_cost < other.total_cost
+                or self.elapsed_seconds < other.elapsed_seconds
+                or self.reliability > other.reliability
+                or self.capacity_utilization < other.capacity_utilization
+                or (
+                    self.emissions_kg_co2e is not None
+                    and other.emissions_kg_co2e is not None
+                    and self.emissions_kg_co2e < other.emissions_kg_co2e
+                )
+            )
         )
 
-        if self.emissions_kg_co2e is not None and other.emissions_kg_co2e is not None:
-            no_worse = no_worse and self.emissions_kg_co2e <= other.emissions_kg_co2e
-            strictly_better = strictly_better or self.emissions_kg_co2e < other.emissions_kg_co2e
 
-        return no_worse and strictly_better
+def remove_dominated_paths(paths: Sequence[CandidatePath]) -> list[CandidatePath]:
+    """Return paths not dominated by another candidate."""
+    return [
+        candidate
+        for index, candidate in enumerate(paths)
+        if not any(
+            other.dominates(candidate)
+            for other_index, other in enumerate(paths)
+            if index != other_index
+        )
+    ]
