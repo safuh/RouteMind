@@ -41,12 +41,14 @@ def extract_optimization_policy(request: str) -> dict[str, Any]:
 def _validation_error(message: str, exc: ValidationError) -> str:
     """Return compact, actionable tool diagnostics instead of a Pydantic traceback."""
     fields = [".".join(str(part) for part in error["loc"]) for error in exc.errors()[:10]]
-    return json.dumps({
-        "errorCode": "ValidationError",
-        "errorMessage": message,
-        "invalidFields": fields,
-        "action": "Provide complete domain objects; do not use path summaries or null transport-leg fields.",
-    })
+    return json.dumps(
+        {
+            "errorCode": "ValidationError",
+            "errorMessage": message,
+            "invalidFields": fields,
+            "action": "Provide complete domain objects; do not use path summaries or null transport-leg fields.",
+        }
+    )
 
 
 def optimize_portfolio_json(
@@ -55,13 +57,7 @@ def optimize_portfolio_json(
     policy_json: str = "{}",
     consolidation_opportunities_json: str = "[]",
 ) -> str:
-    """Optimize a portfolio from complete deterministic CandidatePath/TransportOption JSON.
-
-    This compatibility tool accepts already-discovered candidate paths. It never
-    constructs missing logistics facts. For user-facing workflows, prefer
-    discover_and_optimize_portfolio(), which builds CandidatePath objects from
-    complete Shipment and TransportOption domain data deterministically.
-    """
+    """Optimize a portfolio from complete deterministic CandidatePath/TransportOption JSON."""
     try:
         path_data = json.loads(candidate_paths_json)
         option_data = json.loads(transport_options_json)
@@ -92,12 +88,7 @@ def discover_and_optimize_portfolio(
     policy_json: str = "{}",
     consolidation_opportunities_json: str = "[]",
 ) -> str:
-    """Discover candidate paths deterministically, then optimize the shipment portfolio.
-
-    The agent supplies complete Shipment and TransportOption domain objects. The
-    deterministic path engine derives CandidatePath metrics, so the LLM does not
-    have to manufacture low-level legs, prices, schedules, or path metrics.
-    """
+    """Discover candidate paths deterministically, then optimize the shipment portfolio."""
     try:
         shipment_data = json.loads(shipments_json)
         option_data = json.loads(transport_options_json)
@@ -129,11 +120,15 @@ def discover_and_optimize_portfolio(
         }
 
     if not paths:
-        return json.dumps({
-            "feasible": False,
-            "warnings": ["No feasible candidate paths were discovered for the supplied shipment portfolio."],
-            "search_diagnostics": diagnostics,
-        })
+        return json.dumps(
+            {
+                "feasible": False,
+                "warnings": [
+                    "No feasible candidate paths were discovered for the supplied shipment portfolio."
+                ],
+                "search_diagnostics": diagnostics,
+            }
+        )
 
     result = optimize_portfolio(paths, {option.id: option for option in options}, policy, opportunities)
     payload = json.loads(result.model_dump_json())
@@ -166,13 +161,15 @@ def validate_optimization_result(candidate_paths_json: str, result_json: str) ->
 def summarize_result(result_json: str) -> str:
     """Produce a concise factual summary from a deterministic optimization result."""
     result = OptimizationResult.model_validate_json(result_json)
-    return json.dumps({
-        "feasible": result.feasible,
-        "objective_value": result.objective_value,
-        "warnings": result.warnings,
-        "metrics": result.metrics,
-        "shipments": [plan.shipment_id for plan in result.plans],
-    })
+    return json.dumps(
+        {
+            "feasible": result.feasible,
+            "objective_value": result.objective_value,
+            "warnings": result.warnings,
+            "metrics": result.metrics,
+            "shipments": [plan.shipment_id for plan in result.plans],
+        }
+    )
 
 
 def explain_optimization_result(result_json: str) -> str:
