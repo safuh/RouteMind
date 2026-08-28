@@ -7,7 +7,12 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from routemind.domain.models import OptimizationPolicy, OptimizationResult, Shipment, TransportOption
+from routemind.domain.models import (
+    OptimizationPolicy,
+    OptimizationResult,
+    Shipment,
+    TransportOption,
+)
 from routemind.optimization import optimize_portfolio
 from routemind.paths import PathSearchEngine
 from routemind.paths.models import CandidatePath
