@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from routemind.domain.models import (
@@ -16,9 +16,6 @@ from routemind.domain.policies import (
     option_is_feasible,
     shipment_fits_capacity,
 )
-
-
-UTC = timezone.utc
 
 
 def location(identifier: str, name: str) -> Location:
