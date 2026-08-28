@@ -2,9 +2,9 @@
 
 > Living engineering tracker. Do not mark a component complete until implementation, automated tests, documentation, and validation evidence exist.
 
-**Current phase:** Milestone 3 — Candidate Path Discovery
+**Current phase:** Milestone 4 — Shipment Consolidation
 
-**Overall status:** ~49% — M3 implementation is complete; runtime benchmark evidence remains pending.
+**Overall status:** ~55% — M4 foundation is implemented; runtime validation and broader portfolio scenarios remain.
 
 | Milestone | Area | Status |
 |---|---|---:|
@@ -12,7 +12,7 @@
 | M1 | Multimodal domain + synthetic data | 🟢 |
 | M2 | Transportation graph | 🟢 |
 | M3 | Candidate path discovery | 🟡 |
-| M4 | Shipment consolidation | ⬜ |
+| M4 | Shipment consolidation | 🟡 |
 | M5 | Deterministic optimization | ⬜ |
 | M6 | Google ADK agent layer | ⬜ |
 | M7 | Dynamic re-optimization | ⬜ |
@@ -42,7 +42,8 @@
 - [x] Structured rejection diagnostics
 - [x] Search counters
 - [x] Deterministic benchmark scenario harness
-- [x] Automated economics and diagnostics tests
+- [x] Stable tool/API serialization contract for validated candidates
+- [x] Automated economics, diagnostics and contract tests
 - [x] Path package documentation
 
 ## Remaining validation
@@ -51,26 +52,33 @@
 - [ ] Produce search performance benchmark report
 - [ ] Add provider-specific transfer compatibility semantics
 
-### M3 exit criteria
-- [x] A shipment can receive multiple feasible strategies.
-- [x] Direct and multimodal services are considered.
-- [x] Time, deadline and capacity constraints are respected.
-- [x] Candidates include core decision metrics and Pareto filtering.
-- [x] Rejected alternatives expose machine-readable reasons.
-- [x] Distance-based economics are deterministic when distance is supplied.
-- [ ] Benchmark/performance evidence is executed and recorded.
-
 # M4 — Shipment Consolidation
-**Status: ⬜ Not started**
-- [ ] Shipment grouping
-- [ ] Shared-segment detection
-- [ ] Time-window compatibility
-- [ ] Cargo compatibility
-- [ ] Aggregate capacity
-- [ ] Capacity reservation
-- [ ] Consolidation economics
-- [ ] Hub-and-spoke opportunities
-- [ ] Consolidation vs direct comparison
+**Status: 🟡 Foundation implemented**
+
+## Implemented
+- [x] Concrete scheduled `SharedSegment` identity
+- [x] Shared-segment detection across candidate paths
+- [x] Distinguish same scheduled service from merely same geographic route
+- [x] Aggregate shipment weight and volume
+- [x] Schedule-specific remaining-capacity validation
+- [x] Cargo restriction validation
+- [x] Deadline compatibility validation
+- [x] Service availability validation
+- [x] Fixed/quoted consolidation economics
+- [x] Usage-based consolidation economics
+- [x] Deterministic rejection objects
+- [x] Automated consolidation tests
+- [x] Consolidation package documentation
+
+## Remaining
+- [ ] Common-origin/common-hub shipment grouping
+- [ ] Different-destination shared-prefix detection scenarios
+- [ ] Time-window compatibility across pickup readiness windows
+- [ ] Explicit capacity reservation model
+- [ ] Handling/storage/transfer economics at consolidation boundaries
+- [ ] Consolidation savings vs independent candidate baselines across complete paths
+- [ ] Multi-segment shared-chain detection
+- [ ] Larger deterministic benchmark portfolio
 
 # M5 — Deterministic Optimization Engine
 **Status: ⬜ Not started**
@@ -135,4 +143,5 @@
 |---|---|
 | 2026-08-27 | Candidate path model, multimodal search, constraints, Pareto filtering and diagnostics established |
 | 2026-08-27 | Distance-aware pricing and optional emissions metrics added |
-| 2026-08-27 | Deterministic economics tests and benchmark harness updated |
+| 2026-08-27 | Stable CandidatePath tool serialization contract added to prevent partial legacy payloads entering the domain |
+| 2026-08-28 | M4 shared scheduled-segment detection, aggregate feasibility, consolidation economics and tests added |
