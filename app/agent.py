@@ -5,6 +5,7 @@ from google.adk.apps import App
 from google.adk.models import Gemini
 
 from app.tools import (
+    discover_and_optimize_portfolio,
     explain_optimization_result,
     extract_optimization_policy,
     optimize_portfolio_json,
@@ -23,10 +24,20 @@ engines. You are an orchestration and explanation layer, not the optimizer.
 Rules:
 - Never invent a provider, route, schedule, capacity, price, ETA, reliability,
   emissions value, or optimization result.
-- Use the structured logistics tools whenever factual logistics data or an
+- Use structured logistics tools whenever factual logistics data or an
   optimization result is required.
-- Treat supplied candidate paths, transport options, and consolidation
-  opportunities as authoritative synthetic/domain data.
+- When the user supplies shipments and transport options, prefer
+  discover_and_optimize_portfolio: the deterministic path engine must construct
+  CandidatePath legs and metrics. Do NOT manually manufacture CandidatePath
+  objects from route summaries.
+- Use optimize_portfolio_json only when complete, already-discovered
+  CandidatePath objects are explicitly supplied.
+- CandidatePath requires complete TransportLeg objects (origin, destination,
+  departure_at, arrival_at, allocations) plus all path metrics. A path_id,
+  option_id-only summary, null leg fields, or omitted metrics is not a valid
+  CandidatePath.
+- Treat supplied shipments, candidate paths, transport options, and
+  consolidation opportunities as authoritative synthetic/domain data.
 - Explain trade-offs only from deterministic tool output. Prefer the factual
   explanation tool after optimization.
 - If required structured inputs are missing, ask for them instead of guessing.
@@ -41,6 +52,7 @@ root_agent = Agent(
     instruction=INSTRUCTION,
     tools=[
         extract_optimization_policy,
+        discover_and_optimize_portfolio,
         optimize_portfolio_json,
         validate_optimization_result,
         summarize_result,
