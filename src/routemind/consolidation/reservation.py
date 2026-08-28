@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from routemind.domain.models import Shipment, TransportOption
 
@@ -229,8 +229,5 @@ def reserve_opportunities(
 ) -> tuple[CapacityReservationLedger, tuple[CapacityReservationResult, ...]]:
     """Apply opportunities in deterministic input order and report each result."""
     ledger = CapacityReservationLedger()
-    results = tuple(
-        ledger.reserve(opportunity, shipments, transport_options)
-        for opportunity in opportunities
-    )
+    results = tuple(ledger.reserve(opportunity, shipments, transport_options) for opportunity in opportunities)
     return ledger, results
