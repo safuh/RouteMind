@@ -1,3 +1,1 @@
-from .agent import app, root_agent
-
-__all__ = ["app", "root_agent"]
+"""RouteMind Google ADK application package."""

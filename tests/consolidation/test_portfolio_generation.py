@@ -20,7 +20,6 @@ from routemind.domain.models import (
 )
 from routemind.paths.models import CandidatePath
 
-
 NOW = datetime(2026, 8, 28, 8, tzinfo=UTC)
 NBO = Location(id="NBO", name="Nairobi")
 KIS = Location(id="KIS", name="Kisumu")
