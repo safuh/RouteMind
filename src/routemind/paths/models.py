@@ -5,10 +5,17 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from routemind.domain.models import TransportLeg, TransportMode
+
+
+class PathStatus(StrEnum):
+    """Lifecycle state for a generated candidate path."""
+
+    FEASIBLE = "feasible"
 
 
 class CandidatePath(BaseModel):
@@ -30,6 +37,16 @@ class CandidatePath(BaseModel):
     deadline_feasible: bool
     emissions_kg_co2e: float | None = Field(default=None, ge=0)
     metadata: dict[str, object] = Field(default_factory=dict)
+
+    @property
+    def departure_at(self) -> datetime:
+        """Return the departure time of the path's first leg."""
+        return self.legs[0].departure_at
+
+    @property
+    def arrival_at(self) -> datetime:
+        """Return the arrival time of the path's final leg."""
+        return self.legs[-1].arrival_at
 
     @property
     def elapsed_seconds(self) -> float:
