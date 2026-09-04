@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from decimal import Decimal
 
-from routemind.domain.models import PricingModel, Shipment, TransportOption
+from routemind.domain.models import PricingModel, Shipment, TransportOption, TransportSchedule
 from routemind.domain.policies import shipment_is_compatible
 from routemind.paths.models import CandidatePath
 
@@ -62,7 +62,9 @@ def _segment_from_option(path: CandidatePath, option: TransportOption) -> Shared
     return None
 
 
-def _find_schedule(option: TransportOption, segment: SharedTransportSegment):
+def _find_schedule(
+    option: TransportOption, segment: SharedTransportSegment
+) -> TransportSchedule | None:
     return next(
         (
             schedule

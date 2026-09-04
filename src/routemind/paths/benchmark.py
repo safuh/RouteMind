@@ -5,6 +5,7 @@ These benchmarks validate algorithmic behavior, not real-world provider data.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -12,6 +13,7 @@ from decimal import Decimal
 from routemind.domain.models import (
     Location,
     Package,
+    PricingModel,
     Shipment,
     TransportCapacity,
     TransportMode,
@@ -21,6 +23,8 @@ from routemind.domain.models import (
 )
 
 from .search import PathSearchConfig, PathSearchEngine
+
+Scenario = tuple[list[TransportOption], Shipment]
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,7 +38,7 @@ class BenchmarkResult:
 
 
 def run_benchmark(name: str) -> BenchmarkResult:
-    scenarios = {
+    scenarios: dict[str, Callable[[], Scenario]] = {
         "cheapest_route": _cheapest_route,
         "fastest_route": _fastest_route,
         "deadline_eliminates_cheap": _deadline_eliminates_cheap,
@@ -126,29 +130,29 @@ def _option(
                 arrival_at=departure + timedelta(hours=hours),
             )
         ],
-        price=TransportPrice(model="fixed", amount=Decimal(price), currency="KES"),
+        price=TransportPrice(model=PricingModel.FIXED, amount=Decimal(price), currency="KES"),
         reliability=reliability,
         distance_km=distance_km,
     )
 
 
-def _cheapest_route():
+def _cheapest_route() -> Scenario:
     n, _, e, t, s = _base()
     return [_option("CHEAP", n, e, t, 8, "500"), _option("EXP", n, e, t, 5, "1000")], s
 
 
-def _fastest_route():
+def _fastest_route() -> Scenario:
     n, _, e, t, s = _base()
     return [_option("SLOW", n, e, t, 8, "500"), _option("FAST", n, e, t, 5, "1000")], s
 
 
-def _deadline_eliminates_cheap():
+def _deadline_eliminates_cheap() -> Scenario:
     n, _, e, t, s = _base()
     s = s.model_copy(update={"deadline": t + timedelta(hours=6)})
     return [_option("CHEAP", n, e, t, 8, "500"), _option("FAST", n, e, t, 5, "1000")], s
 
 
-def _capacity_eliminates_direct():
+def _capacity_eliminates_direct() -> Scenario:
     n, k, e, t, s = _base()
     return [
         _option("DIRECT", n, e, t, 8, "700", weight=5),
@@ -157,7 +161,7 @@ def _capacity_eliminates_direct():
     ], s
 
 
-def _multimodal_beats_direct():
+def _multimodal_beats_direct() -> Scenario:
     n, k, e, t, s = _base()
     return [
         _option("DIRECT", n, e, t, 10, "1200"),
@@ -166,7 +170,7 @@ def _multimodal_beats_direct():
     ], s
 
 
-def _reliability_tradeoff():
+def _reliability_tradeoff() -> Scenario:
     n, _, e, t, s = _base()
     return [
         _option("CHEAP", n, e, t, 6, "500", reliability=0.70),
@@ -174,7 +178,7 @@ def _reliability_tradeoff():
     ], s
 
 
-def _transfer_cost_tradeoff():
+def _transfer_cost_tradeoff() -> Scenario:
     n, k, e, t, s = _base()
     return [
         _option("DIRECT", n, e, t, 8, "900"),
@@ -183,6 +187,6 @@ def _transfer_cost_tradeoff():
     ], s
 
 
-def _no_feasible_route():
+def _no_feasible_route() -> Scenario:
     n, _, e, t, s = _base()
     return [_option("TOO_SMALL", n, e, t, 4, "300", weight=5)], s

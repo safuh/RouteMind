@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from routemind.domain.models import TransportOption
+from routemind.domain.models import Location, TransportOption, TransportSchedule
 
 from .models import GraphEdge, GraphNode, TransportGraph
 
 
 def build_transport_graph(
-    locations: list,
+    locations: list[Location],
     transport_options: list[TransportOption],
 ) -> TransportGraph:
     """Build a graph while preserving every scheduled transport service."""
@@ -60,5 +60,5 @@ def build_transport_graph(
     return graph
 
 
-def schedule_is_valid(schedule) -> bool:
+def schedule_is_valid(schedule: TransportSchedule) -> bool:
     return schedule.arrival_at > schedule.departure_at

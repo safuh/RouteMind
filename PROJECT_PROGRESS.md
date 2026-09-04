@@ -2,9 +2,9 @@
 
 > Living engineering tracker. Do not mark a component complete until implementation, automated tests, documentation, and validation evidence exist.
 
-**Current phase:** Milestone 6 — Google ADK Agent Layer
+**Current phase:** Milestone 7 — Dynamic Re-optimization
 
-**Overall status:** ~76% — M3/M4/M5/M6 core implementation is now on `main`. Automated CI validation passes for the merged M5/M6 branch; remaining work is primarily benchmark evidence, richer consolidation portfolio generation, model-backed ADK evaluation, and later milestones.
+**Overall status:** ~79% — M3/M4/M5/M6 core implementation is now on `main`; M7 deterministic disruption recovery foundation is implemented. Remaining work is primarily benchmark evidence, richer consolidation portfolio generation, model-backed ADK evaluation, and production event/data integration.
 
 | Milestone | Area | Status |
 |---|---|---:|
@@ -15,7 +15,7 @@
 | M4 | Shipment consolidation | 🟡 |
 | M5 | Deterministic optimization | 🟢 Core implementation + automated validation |
 | M6 | Google ADK agent layer | 🟢 Core implementation + automated validation |
-| M7 | Dynamic re-optimization | ⬜ |
+| M7 | Dynamic re-optimization | 🟡 |
 | M8 | Predictive logistics intelligence | ⬜ |
 | M9 | Production platform | ⬜ |
 
@@ -109,13 +109,23 @@
 - [ ] Validate local `adk web` interactive session with real Gemini credentials
 
 # M7 — Dynamic Re-optimization
-**Status: ⬜ Not started**
-- [ ] Disruption/event model
-- [ ] Impact analysis
-- [ ] Alternative discovery
-- [ ] Incremental optimization
-- [ ] Recovery validation
-- [ ] Decision audit trail
+**Status: 🟡 Deterministic recovery foundation implemented; live data/event integration pending**
+
+## Implemented
+- [x] Typed service-cancellation, schedule-delay, capacity-reduction and new-order events
+- [x] Plan and candidate-path impact analysis
+- [x] Deterministic replacement-path discovery from event-adjusted transport data
+- [x] Deterministic recovery validation that reports shipments needing replacement candidates
+- [x] Incremental optimization preserving unaffected selected assignments
+- [x] Full shared-capacity enforcement during recovery and new-order insertion
+- [x] Structured decision audit trail
+- [x] Cancellation, capacity-reduction and new-order regression tests
+
+## Remaining
+- [ ] Refresh provider schedules/capacity from production integrations before recovery discovery
+- [ ] Persist disruption events, decisions and plan versions
+- [ ] Multi-event ordering, idempotency and recovery SLA policies
+- [ ] Execute disruption benchmark scenarios and capture recovery metrics
 
 # M8 — Predictive Logistics Intelligence
 **Status: ⬜ Not started**
@@ -161,3 +171,4 @@
 | 2026-08-27 | CP-SAT portfolio optimization with shared scheduled capacity and consolidation objective integration added |
 | 2026-08-27 | Google ADK Logistics Manager, structured tools, grounding rules and CI workflow added |
 | 2026-08-27 | Full 72-test CI suite and ADK import smoke test passed; M5/M6 merged to main |
+| 2026-09-01 | M7 typed disruption events, event-adjusted replacement-path discovery, incremental recovery optimization, capacity-safe new-order insertion and decision audit trail added; full 83-test suite passed locally |

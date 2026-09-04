@@ -73,3 +73,19 @@ Integrations / Data Sources
 ```
 
 FastAPI, PostgreSQL, Redis, authentication, observability and cloud deployment will be added only after the optimization core has measurable benchmark performance.
+
+## Dynamic re-optimization boundary
+
+Disruptions are typed domain facts, not free-form agent instructions. The initial
+recovery workflow supports service cancellation, schedule delay, capacity
+reduction and new-order insertion. It identifies plans affected by the changed
+service, invalidates candidate paths based on stale schedule facts, discovers
+replacement paths from event-adjusted typed transport data, holds unaffected
+selected paths fixed, and re-solves the remaining portfolio with the same
+shared-capacity constraints.
+
+Every recovery result carries an impact summary and decision audit trail. When
+no valid replacement candidate is available, it returns an explicit infeasible
+recovery result instead of fabricating an alternative. Refreshed provider data
+and path discovery are the next integration boundary for generating those
+replacement candidates.

@@ -12,7 +12,7 @@ from app.adk_tools import (
 )
 from app.tools import extract_optimization_policy, validate_optimization_result
 
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-3.6-flash"
 
 INSTRUCTION = """
 You are the RouteMind Logistics Manager.

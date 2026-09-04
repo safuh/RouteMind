@@ -5,8 +5,9 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
+from routemind.consolidation.models import ConsolidationOpportunity
 from routemind.domain.models import (
     OptimizationPolicy,
     OptimizationResult,
@@ -16,6 +17,8 @@ from routemind.domain.models import (
 from routemind.optimization import optimize_portfolio
 from routemind.paths import PathSearchEngine
 from routemind.paths.models import CandidatePath
+
+_consolidation_opportunities_adapter = TypeAdapter(tuple[ConsolidationOpportunity, ...])
 
 
 def extract_optimization_policy(request: str) -> dict[str, Any]:
@@ -72,9 +75,7 @@ def optimize_portfolio_json(
         paths = tuple(CandidatePath.model_validate(item) for item in path_data)
         options = {item["id"]: TransportOption.model_validate(item) for item in option_data}
         policy = OptimizationPolicy.model_validate(policy_data)
-        from routemind.consolidation.models import ConsolidationOpportunity
-
-        opportunities = tuple(ConsolidationOpportunity.model_validate(item) for item in opportunity_data)
+        opportunities = _consolidation_opportunities_adapter.validate_python(opportunity_data)
     except (json.JSONDecodeError, KeyError) as exc:
         return json.dumps({"errorCode": "InvalidJSON", "errorMessage": str(exc)})
     except ValidationError as exc:
@@ -108,9 +109,7 @@ def discover_and_optimize_portfolio(
         shipments = tuple(Shipment.model_validate(item) for item in shipment_data)
         options = tuple(TransportOption.model_validate(item) for item in option_data)
         policy = OptimizationPolicy.model_validate(policy_data)
-        from routemind.consolidation.models import ConsolidationOpportunity
-
-        opportunities = tuple(ConsolidationOpportunity.model_validate(item) for item in opportunity_data)
+        opportunities = _consolidation_opportunities_adapter.validate_python(opportunity_data)
     except (json.JSONDecodeError, KeyError) as exc:
         return json.dumps({"errorCode": "InvalidJSON", "errorMessage": str(exc)})
     except ValidationError as exc:

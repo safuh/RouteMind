@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class RejectionReason(StrEnum):
     INVALID_SHIPMENT_TIMING = "invalid_shipment_timing"
+    CYCLE = "cycle"
     UNAVAILABLE = "unavailable"
     POLICY_MODE = "policy_mode"
     POLICY_PROVIDER = "policy_provider"

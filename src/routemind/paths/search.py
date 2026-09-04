@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from heapq import heappop, heappush
 
@@ -41,7 +41,7 @@ class PathSearchConfig:
 @dataclass(frozen=True, slots=True)
 class _State:
     location_id: str
-    ready_at: object
+    ready_at: datetime
     legs: tuple[TransportLeg, ...]
     cost: Decimal
     reliability: float
@@ -98,7 +98,7 @@ class PathSearchEngine:
         )
         heappush(queue, (Decimal("0"), counter, initial))
         candidates: list[CandidatePath] = []
-        seen: set[tuple[str, object, tuple[str, ...]]] = set()
+        seen: set[tuple[str, datetime, tuple[str, ...]]] = set()
         expansions = 0
 
         while queue and expansions < self._config.max_expansions:
@@ -194,7 +194,7 @@ class PathSearchEngine:
                         available_weight_kg=schedule.available_weight_kg,
                         available_volume_m3=schedule.available_volume_m3,
                     ):
-                        reason = (
+                        capacity_reason = (
                             RejectionReason.WEIGHT_CAPACITY
                             if schedule.available_weight_kg is not None
                             and shipment.weight_kg > schedule.available_weight_kg
@@ -205,7 +205,7 @@ class PathSearchEngine:
                             PathRejection(
                                 option_id=option.id,
                                 schedule_departure=schedule.departure_at.isoformat(),
-                                reason=reason,
+                                reason=capacity_reason,
                                 message="Shipment exceeds schedule-specific transport capacity",
                             ),
                         )

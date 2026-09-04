@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -35,12 +36,22 @@ class CandidatePath(BaseModel):
         return self.transit_seconds + self.waiting_seconds
 
     @property
+    def departure_at(self) -> datetime:
+        """Departure timestamp of the first leg, used by time-window checks."""
+        return self.legs[0].departure_at
+
+    @property
+    def arrival_at(self) -> datetime:
+        """Arrival timestamp of the final leg, used by time-window checks."""
+        return self.legs[-1].arrival_at
+
+    @property
     def option_ids(self) -> tuple[str, ...]:
         return tuple(leg.option_id for leg in self.legs)
 
     @model_validator(mode="after")
     def validate_leg_continuity(self) -> CandidatePath:
-        for previous, current in zip(self.legs, self.legs[1:], strict=True):
+        for previous, current in zip(self.legs, self.legs[1:], strict=False):
             if previous.destination.id != current.origin.id:
                 raise ValueError("Candidate path legs must form a continuous journey")
             if current.departure_at < previous.arrival_at:
